@@ -1,0 +1,3 @@
+Assumptions:
+
+1. Conf file contains all nodes. A node knows all nodes initially and it's neighbors.
