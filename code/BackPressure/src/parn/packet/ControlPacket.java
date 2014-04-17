@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Iterator;
 
+import parn.main.Configurations;
 import parn.main.Main;
 
 public class ControlPacket implements Serializable{
@@ -14,14 +15,32 @@ public class ControlPacket implements Serializable{
 	
 	public int source;
 	public int destination;
+	public int type;
 	public HashMap<Integer, ShadowQueue> shadowQueues;
+	public HashMap<Integer, Integer> shadowPackets;
 	
-	//TODO: what else ?
+	//TODO: Include more fields ?
 
-	public ControlPacket(int source, int destination){
+	public ControlPacket(int source, int destination, int type){
 		this.source=source;
 		this.destination=destination;
-		shadowQueues = Main.getShadowQueues();
+		this.type = type;
+		if(this.type==Configurations.SHADOW_QUEUE_TYPE){ 
+			shadowQueues = Main.getShadowQueues();
+			shadowPackets = null;
+		}else{
+			shadowQueues = null;
+			shadowPackets = new HashMap<Integer, Integer>();
+		}
+		
+	}
+	
+	public void addShadowPacket(int destination, int npackets){
+		if(type==Configurations.SHADOW_PACKET_TYPE){
+			shadowPackets.put(destination, npackets);
+		}else{
+			System.out.println("ERROR: " + this + " received addShadowPacket- " + destination + ", " + npackets);
+		}
 	}
 	
 	public String toString(){

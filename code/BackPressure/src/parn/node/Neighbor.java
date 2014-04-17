@@ -36,6 +36,8 @@ public class Neighbor extends Thread {
 	DataPacketReceiver dataReceiver;
 	ControlPacketReceiver controlReceiver;
 	
+	HashMap<Integer, Integer> shadowPackets;
+	
 	//RealQueue for this neighbor. Accessed by DataPacketSender and Router threads 
 	public LinkedBlockingQueue<DataPacket> realQueue;
 	
@@ -51,6 +53,7 @@ public class Neighbor extends Thread {
 		this.port = port;
 		realQueue = new LinkedBlockingQueue<DataPacket>();
 		shadowQueues = new HashMap<Integer, ShadowQueue>();
+		shadowPackets = new HashMap<Integer, Integer>();
 	}
 	
 	public Neighbor(Node node, int port){
@@ -58,12 +61,16 @@ public class Neighbor extends Thread {
 		this.port = port;
 		realQueue = new LinkedBlockingQueue<DataPacket>();
 		shadowQueues = new HashMap<Integer, ShadowQueue>();
-
+		shadowPackets = new HashMap<Integer, Integer>();
 	}
 	
 	//TODO: No need to initialize neighbors shadow queue, right ? 
 	//public initializeShadowQueues(){
 	//}
+	
+	public void reset(){
+		shadowPackets = new HashMap<Integer, Integer>();
+	}
 	
 	public String toString(){
 		return "Neighbor["+node.id+","+port+"]";
@@ -79,6 +86,7 @@ public class Neighbor extends Thread {
 			//TODO: Should we send updates or all Shadow queue (tradeoff - packet size vs number of control packets) ? Perhaps, batch updates ?
 			shadowQueues = packet.shadowQueues;
 		}
+		Main.notifyShadowQueueArrival();
 	}
 	
 	public void run(){

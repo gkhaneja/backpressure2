@@ -3,6 +3,8 @@ package parn.worker;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 
+import parn.main.Configurations;
+import parn.main.Main;
 import parn.node.Neighbor;
 import parn.packet.ControlPacket;
 
@@ -28,7 +30,11 @@ public class ControlPacketReceiver extends Thread {
 			try {
 				ControlPacket packet = (ControlPacket) connection.readObject();
 				System.out.println(this + " received " + packet);
-				neighbor.updateShadowQueue(packet);
+				if(packet.type == Configurations.SHADOW_QUEUE_TYPE){
+					neighbor.updateShadowQueue(packet);
+				}else { 
+					Main.updateShadowQueue(packet);
+				}
 			} catch (ClassNotFoundException | IOException e) {
 				System.out.println(this + " Error receving data packets");
 				//TODO: perhaps remove stack trace

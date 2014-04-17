@@ -17,6 +17,7 @@ public class DataPacket implements Serializable {
 	public int destination;
 	public int sequenceNumber;
 	
+	
 	public DataPacket(int flowID, int source, int destination, int sequenceNumber){
 		this.flowID = flowID;
 		this.source = source;

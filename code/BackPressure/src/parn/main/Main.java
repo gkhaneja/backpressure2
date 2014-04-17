@@ -12,6 +12,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 import parn.node.Neighbor;
 import parn.node.Node;
+import parn.packet.ControlPacket;
 import parn.packet.DataPacket;
 import parn.packet.ShadowQueue;
 import parn.worker.Flow;
@@ -30,6 +31,13 @@ public class Main {
 	public static HashMap<Integer, Flow> flows;
 	public static Router router;
 	public static int nextFlowID;
+	public static Object syncLock;
+	
+	//private static int nShadowQueue;
+	
+	private static Object shadowQueueLock = new Object();
+	
+	public static int nShadowQueueReceived;
 
 	public static boolean init(int id, String confFile){
 		//TODO: change static id assignment: Done
@@ -41,6 +49,11 @@ public class Main {
 		flows = new HashMap<Integer, Flow>();
 		router = new Router();
 		nextFlowID=0;
+		nShadowQueueReceived=0;
+		
+		shadowQueueLock= new Object();
+		syncLock = new Object();
+		
 
 		try {
 			BufferedReader reader = new BufferedReader(new FileReader(new File(confFile)));
@@ -91,18 +104,45 @@ public class Main {
 		return true;
 	}
 	
+	
+	public static void notifyShadowQueueArrival(){
+		//TODO: lock here
+		synchronized(syncLock){
+			nShadowQueueReceived++;
+			syncLock.notify();
+		}
+		
+	}
+	
+	public static void reset(){
+		nShadowQueueReceived=0;
+		Iterator<Neighbor> iterator = neighbors.values().iterator();
+		while(iterator.hasNext()){
+			iterator.next().reset();
+		}
+	}
+	
 	public static HashMap<Integer, ShadowQueue> getShadowQueues(){
 		//TODO: Do we need locking here - synchronized with Main.updateShadowQueue(dest, change) ?
 		//TODO: Should we send the reference to original or should we return a copy (expensive) ?
 		return Main.shadowQueues;
 	}
 	
-	public static void updateShadowQueue(int destination, int change){
-		Object lock = new Object();
-		synchronized(lock){
-			if(shadowQueues.containsKey(destination)){
-				shadowQueues.get(destination).update(change);//, change + shadowQueues.get(desti))
+	public static void updateShadowQueue(ControlPacket packet){
+		if(packet.type!=Configurations.SHADOW_PACKET_TYPE){
+			System.out.println("ERROR: updateShadowQueue: wrong packet " + packet);
+			return;
+		}
+		
+		synchronized(shadowQueueLock){
+			Iterator<Integer> iterator = packet.shadowPackets.keySet().iterator();
+			while(iterator.hasNext()){
+				int destination = iterator.next();
+				if(shadowQueues.containsKey(destination)){
+					shadowQueues.get(destination).update(packet.shadowPackets.get(destination));//, change + shadowQueues.get(desti))
+				}	
 			}
+			
 		}
 	}
 	

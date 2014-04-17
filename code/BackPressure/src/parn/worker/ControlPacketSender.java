@@ -32,7 +32,7 @@ public class ControlPacketSender extends Thread{
 			}
 			
 			//TODO: Should we have event listening model ? or should we keep sending it at regular intervals ? I think it should be based on updates (event). But keeping latter for now.
-			ControlPacket packet = new ControlPacket(Main.ID, neighbor.node.id);
+			ControlPacket packet = new ControlPacket(Main.ID, neighbor.node.id, );
 			try {
 				connection.writeObject(packet);
 			} catch (IOException e) {
