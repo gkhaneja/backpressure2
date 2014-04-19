@@ -1,5 +1,6 @@
 package parn.worker;
 
+import java.util.HashMap;
 import java.util.Iterator;
 
 import parn.main.Main;
@@ -16,9 +17,34 @@ public class ShadowPacketGenerator extends Thread {
 					Iterator<Integer> iterator = Main.neighbors.keySet().iterator();
 					while(iterator.hasNext()){
 						Neighbor neighbor = Main.neighbors.get(iterator.next());
-						if(neighbor)
+						Iterator<Integer> destinations = neighbor.shadowQueues.keySet().iterator();
+						int maxWeight = 0;
+						int winnerDest=-1;
+						while(destinations.hasNext()){
+							int dest = destinations.next();
+							int weight = Main.shadowQueues.get(dest).length - neighbor.shadowQueues.get(dest).length - Main.M;
+							if(weight > maxWeight){
+								winnerDest = dest;
+								weight = maxWeight;
+							}
+						}
+						if(maxWeight>0){
+							//TODO: how many shadow packets are to be transfered over link: Capacity ?
+							int nShadowPackets = Main.Capacity;
+							//TODO: lock for shadow queue
+							Main.shadowQueues.get(winnerDest).update(-1*nShadowPackets);
+							HashMap<Integer, Integer> shadowPackets = new HashMap<Integer, Integer>();
+							shadowPackets.put(winnerDest, nShadowPackets);
+							neighbor.sendShadowPackets(shadowPackets);
+							
+						}
+						
 					}
-					
+					//TODO: send shadowQueues
+					//set a sync variable (with locks), on which controlpacketsenders are waiting.
+					//Done.
+					Main.shadowQueueSendingNotification.notifyAll();
+					Main.reset();
 				}
 				try {
 					Main.syncLock.wait();

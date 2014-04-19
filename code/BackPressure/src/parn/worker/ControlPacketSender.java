@@ -32,7 +32,14 @@ public class ControlPacketSender extends Thread{
 			}
 			
 			//TODO: Should we have event listening model ? or should we keep sending it at regular intervals ? I think it should be based on updates (event). But keeping latter for now.
-			ControlPacket packet = new ControlPacket(Main.ID, neighbor.node.id, );
+			//solution: Having it based on notifications.
+			try {
+				Main.shadowQueueSendingNotification.wait();
+			} catch (InterruptedException e1) {
+				e1.printStackTrace();
+			}
+			
+			ControlPacket packet = new ControlPacket(Main.ID, neighbor.node.id, Configurations.SHADOW_QUEUE_TYPE);
 			try {
 				connection.writeObject(packet);
 			} catch (IOException e) {

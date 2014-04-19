@@ -89,6 +89,19 @@ public class Neighbor extends Thread {
 		Main.notifyShadowQueueArrival();
 	}
 	
+	public void sendShadowPackets(HashMap<Integer, Integer> shadowPackets){
+		
+		ControlPacket packet = new ControlPacket(Main.ID, node.id, Configurations.SHADOW_PACKET_TYPE );
+		packet.shadowPackets = shadowPackets;
+		try {
+			control.out.writeObject(packet);
+		} catch (IOException e) {
+			System.out.println(this + ": Error sending " + packet);
+			//TODO: comment stack trace, may be
+			e.printStackTrace();
+		}
+	}
+	
 	public void run(){
 		control = new Connection();
 		controlSocket= new Socket();

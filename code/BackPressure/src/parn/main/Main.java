@@ -17,26 +17,39 @@ import parn.packet.DataPacket;
 import parn.packet.ShadowQueue;
 import parn.worker.Flow;
 import parn.worker.Router;
+import parn.worker.ShadowPacketGenerator;
 
 public class Main {
 
 	//TODO: where are back pressure weighs calculated ? I have pnd's and pnj's. Where to calculate wnj[d] = pnd - pnj ?
-	//TODO: 
+	//Done. In shadowPacketGenerator.
 	
-	public static int ID;
+	//Data fields
 	public static HashMap<Integer, Node> nodes;
 	public static HashMap<Integer, Neighbor> neighbors;
 	public static LinkedBlockingQueue<DataPacket> inputBuffer;
-	private static HashMap<Integer, ShadowQueue> shadowQueues;
+	public static HashMap<Integer, ShadowQueue> shadowQueues;
 	public static HashMap<Integer, Flow> flows;
-	public static Router router;
+	
+	//Global variables
+	public static int ID;
 	public static int nextFlowID;
-	public static Object syncLock;
+	public static int M;
+	public static double epsilon;
+	public static int Capacity;
 	
 	//private static int nShadowQueue;
 	
-	private static Object shadowQueueLock = new Object();
-	
+	//Threads
+	public static Router router;
+	public static ShadowPacketGenerator shadowPacketGenerator;
+
+	//Locks and Notifiers
+	private static Object shadowQueueLock;
+	public static Object syncLock;
+	public static Object shadowQueueSendingNotification;
+
+	//Shared and synchronized (lock protected) fields:
 	public static int nShadowQueueReceived;
 
 	public static boolean init(int id, String confFile){
@@ -48,11 +61,17 @@ public class Main {
 		shadowQueues = new HashMap<Integer, ShadowQueue>();
 		flows = new HashMap<Integer, Flow>();
 		router = new Router();
+		shadowPacketGenerator = new ShadowPacketGenerator();
 		nextFlowID=0;
 		nShadowQueueReceived=0;
+		M=0;
+		epsilon=0.1;
+		//TODO: change this. For testing.
+		Capacity = 1;
 		
 		shadowQueueLock= new Object();
 		syncLock = new Object();
+		shadowQueueSendingNotification = new Object();
 		
 
 		try {
@@ -95,7 +114,7 @@ public class Main {
 		startConnectionWorkers();
 		generateFlows();
 		
-
+		shadowPacketGenerator.start();
 		router.start();
 
 		//printNodes();
