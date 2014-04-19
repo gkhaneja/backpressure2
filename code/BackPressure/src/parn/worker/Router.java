@@ -4,6 +4,7 @@ import java.util.Iterator;
 
 import parn.main.Main;
 import parn.node.Neighbor;
+import parn.node.Node;
 import parn.packet.DataPacket;
 
 public class Router extends Thread {
@@ -21,13 +22,16 @@ public class Router extends Thread {
 			//TODO: check
 			if(packet==null) continue;
 			//TODO: TokenBucket algorithm
-			//TODO: the following meant to be testing snippet for thread working. IT should be removed and replaced by Tocket Bucket algorithm
+			//TODO: the following meant to be testing snippet for thread working. IT should be removed and replaced by Toket Bucket algorithm
+			//Done. Adding token bucket algo
 			if(packet.destination == Main.ID){
 				consumePacket();
 			} else if(Main.nodes.containsKey(packet.destination)){
 				//TODO: to be changed - 
-				Iterator<Integer> it = Main.neighbors.keySet().iterator();
-				Neighbor neighbor = Main.neighbors.get(it.next());
+				//Done. Changing
+				Node destination = Main.nodes.get(packet.destination);
+				int link = destination.getTokenBucket();
+				Neighbor neighbor = Main.neighbors.get(link);
 				try {
 					neighbor.realQueue.put(packet);
 				} catch (InterruptedException e) {
@@ -38,7 +42,7 @@ public class Router extends Thread {
 			}else{
 				System.out.println("Unknown destination. Dropping " + packet);
 			}
-			//Flight to champaign - H3 gate 
+			
 			
 			
 			
@@ -46,7 +50,7 @@ public class Router extends Thread {
 	}
 	
 	public void consumePacket(){
-		//TODO: consume it with slat n pepper
+		//TODO: consume packet, update end-to-end metrics
 	}
 	
 	public String toString(){

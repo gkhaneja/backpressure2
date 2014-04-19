@@ -19,9 +19,13 @@ public class ShadowQueue implements Serializable {
 	
 	public void update(int change){
 		length += change; 
+		//TODO: Not sure about this check
+		if(length < 0){
+			System.out.println("ERROR: " + this);
+		}
 	}
 	
 	public String toString(){
-		return destination + "->" + length;
+		return "ShadowQueue[" + destination + "->" + length + "]";
 	}
 }

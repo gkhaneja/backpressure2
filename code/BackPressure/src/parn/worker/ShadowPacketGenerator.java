@@ -5,6 +5,7 @@ import java.util.Iterator;
 
 import parn.main.Main;
 import parn.node.Neighbor;
+import parn.node.Node;
 
 public class ShadowPacketGenerator extends Thread {
 	
@@ -34,6 +35,8 @@ public class ShadowPacketGenerator extends Thread {
 							//TODO: lock for shadow queue
 							Main.shadowQueues.get(winnerDest).update(-1*nShadowPackets);
 							HashMap<Integer, Integer> shadowPackets = new HashMap<Integer, Integer>();
+							Node winnerNode = Main.nodes.get(winnerDest);
+							winnerNode.updateTokenBucket(neighbor.node.id, -1*nShadowPackets);
 							shadowPackets.put(winnerDest, nShadowPackets);
 							neighbor.sendShadowPackets(shadowPackets);
 							

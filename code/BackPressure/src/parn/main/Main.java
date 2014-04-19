@@ -109,7 +109,11 @@ public class Main {
 			e.printStackTrace();
 			return false;
 		}
-
+		
+		Iterator<Integer> iterator = nodes.keySet().iterator();
+		while(iterator.hasNext()){
+			nodes.get(iterator.next()).init();
+		}
 
 		startConnectionWorkers();
 		generateFlows();
