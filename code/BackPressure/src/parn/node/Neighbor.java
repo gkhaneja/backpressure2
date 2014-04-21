@@ -115,9 +115,11 @@ public class Neighbor extends Thread {
 		if(!createConnection(data, dataSocket)){
 			//TODO: Error handling on connection failure
 			return;
+		}else{
+			System.out.println(this + " is connected");
 		}
 		
-		System.out.println("Starting threads");
+		//System.out.println("Starting threads");
 		controlReceiver = new ControlPacketReceiver(this, control.in);
 		controlSender = new ControlPacketSender(this, control.out);
 		controlReceiver.start();
@@ -153,7 +155,7 @@ public class Neighbor extends Thread {
 				int ntries=0;
 				//boolean connected = false;
 				while(ntries++ < Configurations.MAX_CONN_ATTEMTPS){
-					System.out.println("Trying to connect to " + this);
+					//System.out.println("Trying to connect to " + this);
 					try{
 						socket = new Socket(node.address,port);//, Main.nodes.get(Main.ID).address, Configurations.getAvailablePort());
 						//connected = true;
@@ -176,7 +178,7 @@ public class Neighbor extends Thread {
 				connection.out.flush();
 				connection.in = new ObjectInputStream(socket.getInputStream());
 			}else{
-				System.out.println("Waiting for connection from " + this);
+				//System.out.println("Waiting for connection from " + this);
 				ServerSocket serverSocket = new ServerSocket(port, Configurations.BACKLOG, Main.nodes.get(Main.ID).address);
 				socket = serverSocket.accept();		
 				serverSocket.close();
@@ -190,7 +192,7 @@ public class Neighbor extends Thread {
 			return false;
 			
 		}
-		System.out.println(this + " is connected");
+		//System.out.println(this + " is connected");
 		/*try {
 			System.out.println("Waiting for streams from " + this);
 			connection.in = new ObjectInputStream(socket.getInputStream());

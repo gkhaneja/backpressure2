@@ -33,6 +33,7 @@ public class DataPacketSender extends Thread {
 				System.out.println(this + ": Error sending " + packet);
 				//TODO: comment stack trace, may be
 				e.printStackTrace();
+				break;
 			}
 		}
 	}

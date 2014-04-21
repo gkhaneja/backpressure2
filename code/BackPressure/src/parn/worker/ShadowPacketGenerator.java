@@ -9,12 +9,22 @@ import parn.node.Node;
 
 public class ShadowPacketGenerator extends Thread {
 	
+	int iteration;
+	
+	public String toString(){
+		return "ShadowPacketGenerator[" + iteration + "]"; 
+	}
+	
 	public void run(){
+		iteration=0;
+		
 		//Loop - check if Main.nShadowPacketReceived == #neighbor, then, Apply BackPressure algorithm: 
 		//Calculate shadow packets, Update shadow queue, and send shadow packets to neighbors, followed by shadow queue
 		while(true){
 			synchronized(Main.syncLock){
 				if(Main.nShadowQueueReceived == Main.neighbors.size()){
+					iteration++;
+					System.out.println(this);
 					Iterator<Integer> iterator = Main.neighbors.keySet().iterator();
 					while(iterator.hasNext()){
 						Neighbor neighbor = Main.neighbors.get(iterator.next());
@@ -46,7 +56,9 @@ public class ShadowPacketGenerator extends Thread {
 					//TODO: send shadowQueues
 					//set a sync variable (with locks), on which controlpacketsenders are waiting.
 					//Done.
-					Main.shadowQueueSendingNotification.notifyAll();
+					synchronized(Main.shadowQueueSendingNotification){
+						Main.shadowQueueSendingNotification.notifyAll();
+					}
 					Main.reset();
 				}
 				try {

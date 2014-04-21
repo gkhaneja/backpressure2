@@ -34,7 +34,7 @@ public class DataPacketReceiver extends Thread {
 				if(packet.checkValidity()) Main.inputBuffer.put(packet);
 				System.out.println(this + ": received " + packet);
 
-			} catch (ClassNotFoundException | IOException e) {
+			} catch (IOException e) {
 				System.out.println(this + " Error receving data packets");
 				//TODO: perhaps remove stack trace
 				e.printStackTrace();
@@ -42,6 +42,11 @@ public class DataPacketReceiver extends Thread {
 				System.out.println(this + " Error adding packet to input buffer");
 				//TODO: perhaps remove stack trace
 				e.printStackTrace();
+			}catch (ClassNotFoundException e) {
+				System.out.println(this + " Error adding packet to input buffer");
+				//TODO: perhaps remove stack trace
+				e.printStackTrace();
+				break;
 			}
 			
 		

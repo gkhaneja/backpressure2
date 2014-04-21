@@ -35,10 +35,11 @@ public class ControlPacketReceiver extends Thread {
 				}else { 
 					Main.updateShadowQueue(packet);
 				}
-			} catch (ClassNotFoundException | IOException e) {
+			} catch (Exception e) {
 				System.out.println(this + " Error receving data packets");
 				//TODO: perhaps remove stack trace
 				e.printStackTrace();
+				break;
 			}
 		}
 	}

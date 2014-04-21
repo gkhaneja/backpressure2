@@ -37,8 +37,8 @@ public class Main {
 	public static int M;
 	public static double epsilon;
 	public static int Capacity;
+
 	
-	//private static int nShadowQueue;
 	
 	//Threads
 	public static Router router;
@@ -73,7 +73,27 @@ public class Main {
 		syncLock = new Object();
 		shadowQueueSendingNotification = new Object();
 		
+		if(!parseConfFile(confFile)) return false;
+		
+		
+		Iterator<Integer> iterator = nodes.keySet().iterator();
+		while(iterator.hasNext()){
+			nodes.get(iterator.next()).init();
+		}
 
+		startConnectionWorkers();
+		generateFlows();
+		
+		shadowPacketGenerator.start();
+		router.start();
+
+		//printNodes();
+		//printNeighbors();
+
+		return true;
+	}
+	
+	public static boolean parseConfFile(String confFile){
 		try {
 			BufferedReader reader = new BufferedReader(new FileReader(new File(confFile)));
 			String line;
@@ -100,7 +120,7 @@ public class Main {
 				}
 			}
 			reader.close();
-
+			return true;
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 			return false;
@@ -109,22 +129,6 @@ public class Main {
 			e.printStackTrace();
 			return false;
 		}
-		
-		Iterator<Integer> iterator = nodes.keySet().iterator();
-		while(iterator.hasNext()){
-			nodes.get(iterator.next()).init();
-		}
-
-		startConnectionWorkers();
-		generateFlows();
-		
-		shadowPacketGenerator.start();
-		router.start();
-
-		//printNodes();
-		//printNeighbors();
-
-		return true;
 	}
 	
 	
@@ -183,6 +187,9 @@ public class Main {
 
 	public static void generateFlows(){
 		//TODO: For testing, generating preset flow-pattern - One flow for each node. This should be replaced appropriately. 
+		if(Configurations.TURN_OFF_FLOWS){
+			return;
+		}
 		Random rand = new Random();
 		Iterator<Integer> nodeIterator = nodes.keySet().iterator();
 		while(nodeIterator.hasNext()){
@@ -199,12 +206,9 @@ public class Main {
 
 
 	public static int getNextFlowID(){
-		Object lock = new Object();
-		int newFlowId=0;
-		synchronized(lock){
-			newFlowId = Main.nextFlowID;
-			Main.nextFlowID++;
-		}
+		int newFlowId=0;		
+		newFlowId = Main.nextFlowID;
+		Main.nextFlowID++;		
 		return newFlowId;
 	}
 
@@ -233,8 +237,8 @@ public class Main {
 
 	public static void main(String[] args) {
 		//Main.init(1,"bp.conf");
-		Main.init(2,"bp.conf");
-
+		System.out.println("Given id: " + args[0]);
+		Main.init(Integer.parseInt(args[0]),"bp.conf");
 	}
 
 }

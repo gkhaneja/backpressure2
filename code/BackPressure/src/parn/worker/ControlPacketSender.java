@@ -31,13 +31,7 @@ public class ControlPacketSender extends Thread{
 				System.out.println(this + " got interrupted");
 			}
 			
-			//TODO: Should we have event listening model ? or should we keep sending it at regular intervals ? I think it should be based on updates (event). But keeping latter for now.
-			//solution: Having it based on notifications.
-			try {
-				Main.shadowQueueSendingNotification.wait();
-			} catch (InterruptedException e1) {
-				e1.printStackTrace();
-			}
+			
 			
 			ControlPacket packet = new ControlPacket(Main.ID, neighbor.node.id, Configurations.SHADOW_QUEUE_TYPE);
 			try {
@@ -46,6 +40,17 @@ public class ControlPacketSender extends Thread{
 				System.out.println(this + ": Error sending " + packet);
 				//TODO: comment stack trace, may be
 				e.printStackTrace();
+				break;
+			}
+			
+			//TODO: Should we have event listening model ? or should we keep sending it at regular intervals ? I think it should be based on updates (event). But keeping latter for now.
+			//solution: Having it based on notifications.
+			try {
+				synchronized(Main.shadowQueueSendingNotification){
+					Main.shadowQueueSendingNotification.wait();
+				}
+			} catch (InterruptedException e1) {
+				e1.printStackTrace();
 			}
 		}
 	}
