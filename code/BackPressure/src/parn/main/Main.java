@@ -80,6 +80,9 @@ public class Main {
 		while(iterator.hasNext()){
 			nodes.get(iterator.next()).init();
 		}
+		
+		System.out.println("No. of nodes: " + nodes.size());
+		System.out.println("No. of neighbors: " + neighbors.size());
 
 		startConnectionWorkers();
 		generateFlows();
@@ -165,12 +168,31 @@ public class Main {
 			Iterator<Integer> iterator = packet.shadowPackets.keySet().iterator();
 			while(iterator.hasNext()){
 				int destination = iterator.next();
+				if(destination==Main.ID){
+					continue;
+				}
 				if(shadowQueues.containsKey(destination)){
 					shadowQueues.get(destination).update(packet.shadowPackets.get(destination));//, change + shadowQueues.get(desti))
 				}	
 			}
 			
 		}
+	}
+	
+	//Just used by flow generators to add shadow packets to shadow queues
+	public static void addShadowPackets(int destination, int nShadowPackets){
+		//System.out.print("Trying to Shadow Packets. ");
+		//TODO: We should consume our packets, right ?
+		if(destination==Main.ID){
+			return;
+		}
+		synchronized(shadowQueueLock){
+			if(shadowQueues.containsKey(destination)){
+				shadowQueues.get(destination).update(nShadowPackets);
+				//System.out.println("Added.");
+			}
+		}
+		
 	}
 	
 	public static void startConnectionWorkers(){
@@ -196,7 +218,7 @@ public class Main {
 			int nodeId = nodeIterator.next();
 			if(Main.ID!=nodeId){
 				int flowId = Main.getNextFlowID();
-				Flow flow = new Flow(flowId, Main.ID, nodeId, 0.2);
+				Flow flow = new Flow(flowId, Main.ID, nodeId, 10);
 				flows.put(flowId, flow);
 				flow.start();
 			}

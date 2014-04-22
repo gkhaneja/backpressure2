@@ -21,12 +21,6 @@ public class ControlPacketReceiver extends Thread {
 		//System.out.println(this + " is starting.");
 		while(true){
 			//System.out.println(this + " is running");
-			/*try{
-				sleep(5000);
-			}catch(InterruptedException e){
-				System.out.println(this + " got interrupted");
-			}*/
-			//TODO: Receiver shouldn't sleep, right ?
 			try {
 				ControlPacket packet = (ControlPacket) connection.readObject();
 				System.out.println(this + " received " + packet);
@@ -37,7 +31,6 @@ public class ControlPacketReceiver extends Thread {
 				}
 			} catch (Exception e) {
 				System.out.println(this + " Error receving data packets");
-				//TODO: perhaps remove stack trace
 				e.printStackTrace();
 				break;
 			}

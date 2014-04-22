@@ -16,35 +16,26 @@ public class DataPacketReceiver extends Thread {
 		this.connection = connection;
 	}
 	
-	//TODO: Handle unexpected connection close
 	public void run(){
 		//System.out.println(this + " is starting.");
 		while(true){
 			//System.out.println(this + " is running");
-			//TODO: parametrized sleep time for all sender/receiver threads
-			try{
-				sleep(5000);
-			}catch(InterruptedException e){
-				System.out.println(this + " got interrupted");
-			}
 			try {
 				DataPacket packet = (DataPacket) connection.readObject();
-				//Check and decrement TTL before putting packet in input buffer
-				//TODO: Exception giving line - 
+				//CheckValidity: Check and decrement TTL before putting packet in input buffer 
 				if(packet.checkValidity()) Main.inputBuffer.put(packet);
 				System.out.println(this + ": received " + packet);
 
 			} catch (IOException e) {
 				System.out.println(this + " Error receving data packets");
-				//TODO: perhaps remove stack trace
 				e.printStackTrace();
+				break;
 			} catch (InterruptedException e) {
 				System.out.println(this + " Error adding packet to input buffer");
-				//TODO: perhaps remove stack trace
 				e.printStackTrace();
+				break;
 			}catch (ClassNotFoundException e) {
 				System.out.println(this + " Error adding packet to input buffer");
-				//TODO: perhaps remove stack trace
 				e.printStackTrace();
 				break;
 			}

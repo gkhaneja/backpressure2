@@ -24,7 +24,7 @@ public class ShadowPacketGenerator extends Thread {
 			synchronized(Main.syncLock){
 				if(Main.nShadowQueueReceived == Main.neighbors.size()){
 					iteration++;
-					System.out.println(this);
+					System.out.print(this);
 					Iterator<Integer> iterator = Main.neighbors.keySet().iterator();
 					while(iterator.hasNext()){
 						Neighbor neighbor = Main.neighbors.get(iterator.next());
@@ -33,10 +33,11 @@ public class ShadowPacketGenerator extends Thread {
 						int winnerDest=-1;
 						while(destinations.hasNext()){
 							int dest = destinations.next();
+							//System.out.print( " " + Main.shadowQueues.get(dest).length + "-" + neighbor.shadowQueues.get(dest).length + "-" + Main.M);
 							int weight = Main.shadowQueues.get(dest).length - neighbor.shadowQueues.get(dest).length - Main.M;
 							if(weight > maxWeight){
 								winnerDest = dest;
-								weight = maxWeight;
+								maxWeight  = weight;
 							}
 						}
 						if(maxWeight>0){
@@ -48,11 +49,15 @@ public class ShadowPacketGenerator extends Thread {
 							Node winnerNode = Main.nodes.get(winnerDest);
 							winnerNode.updateTokenBucket(neighbor.node.id, -1*nShadowPackets);
 							shadowPackets.put(winnerDest, nShadowPackets);
+							System.out.print(" Sending " + nShadowPackets + " SahdowPackets to " + neighbor);
 							neighbor.sendShadowPackets(shadowPackets);
 							
+						}else{
+							System.out.print(" No packets for " + neighbor);
 						}
 						
 					}
+					System.out.println();
 					//TODO: send shadowQueues
 					//set a sync variable (with locks), on which controlpacketsenders are waiting.
 					//Done.

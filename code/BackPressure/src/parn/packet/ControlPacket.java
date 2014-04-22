@@ -55,7 +55,8 @@ public class ControlPacket implements Serializable{
 			ret += "ShadowPackets][";
 			Iterator<Integer> shadowPacketsIterator = shadowPackets.keySet().iterator();
 			while(shadowPacketsIterator.hasNext()){
-				ret += shadowPackets.get(shadowPacketsIterator.next()) + ", ";
+				int destination = shadowPacketsIterator.next();
+				ret += destination + "->" + shadowPackets.get(destination) + ", ";
 			}
 		}
 		return ret + "]";

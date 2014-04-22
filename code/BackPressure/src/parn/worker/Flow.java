@@ -25,12 +25,11 @@ public class Flow extends Thread {
 	
 	
 	public void run(){
-		//Random rand = new Random();
+		Random rand = new Random();
 		int sleepTime =  (int) ((int) 1.0/rate);
-		System.out.println("Sleep time is " + sleepTime);
+		//System.out.println("Sleep time is " + sleepTime);
 		while(true){
-			//TODO: Add randomness
-			//TODO: Add logging
+			//TODO: Add randomness according to conf file
 			try{
 				sleep(sleepTime*1000);
 			}catch(InterruptedException e){
@@ -40,9 +39,14 @@ public class Flow extends Thread {
 			try {
 				Main.inputBuffer.put(packet);
 				System.out.println("Generated " + packet);
+				//TODO: Add Shadow Packets
+				if(rand.nextDouble() < Main.epsilon){
+					Main.addShadowPackets(destination, 2);
+				}else{
+					Main.addShadowPackets(destination, 1);
+				}
 			} catch (InterruptedException e) {
 				System.out.println(this + " Error adding packet to input buffer");
-				//TODO: perhaps remove stack trace
 				e.printStackTrace();
 			}
 		}

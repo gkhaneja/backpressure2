@@ -26,6 +26,6 @@ public class ShadowQueue implements Serializable {
 	}
 	
 	public String toString(){
-		return "ShadowQueue[" + destination + "->" + length + "]";
+		return destination + "->" + length;
 	}
 }

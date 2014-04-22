@@ -1,5 +1,6 @@
 src/parn/main/Configurations.java
 src/parn/main/Main.java
+src/parn/main/Metrics.java
 src/parn/node/Connection.java
 src/parn/node/Neighbor.java
 src/parn/node/Node.java
