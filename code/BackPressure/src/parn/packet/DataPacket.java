@@ -18,8 +18,8 @@ public class DataPacket implements Serializable {
 	public int destination;
 	public int sequenceNumber;
 	public ArrayList<Integer> path;
-	long time;
-	byte[] payload;
+	public long time;
+	public byte[] payload;
 	
 	
 	public DataPacket(int flowID, int source, int destination, int sequenceNumber){

@@ -16,6 +16,14 @@ public class Node {
 	// tokenBuckets;
 	private HashMap<Integer, Integer> tokenBuckets;
 	
+	//packet counts
+	private HashMap<Integer, Integer> packetsPerLink;
+	private int packetsTotal;
+	
+	//ratios
+	HashMap<Integer, Double> probs;
+	HashMap<Integer, Double> prevProbs;
+	
 	
 	
 	public Node(int id, InetAddress address) {
@@ -24,14 +32,43 @@ public class Node {
 		this.address = address;
 		shadowQueue=0;
 		tokenBuckets = new HashMap<Integer, Integer>();
-		
+		packetsTotal = 0;
+		packetsPerLink = new HashMap<Integer, Integer>();
+		probs = new HashMap<Integer, Double>();
+		prevProbs = new HashMap<Integer, Double>();
 	}
 	
 	public void init(){
 		Iterator<Integer> iterator = Main.neighbors.keySet().iterator();
 		while(iterator.hasNext()){
-			tokenBuckets.put(iterator.next(), 0);
+			int neighbor = iterator.next();
+			tokenBuckets.put(neighbor, 0);
+			packetsPerLink.put(neighbor, 0);
+			probs.put(neighbor, 0.0);
+			prevProbs.put(neighbor, 0.0);
+			
 		}
+	}
+	
+	public boolean updateProbs(){
+		Iterator<Integer> iterator = packetsPerLink.keySet().iterator();
+		while(iterator.hasNext()){
+			int neighbor = iterator.next();
+			prevProbs.put(neighbor, probs.get(neighbor));
+			probs.put(neighbor, (packetsPerLink.get(neighbor)*1.0) / (1.0*packetsTotal));
+		}
+		return checkStability();
+	}
+	
+	public boolean checkStability(){
+		Iterator<Integer> iterator = packetsPerLink.keySet().iterator();
+		while(iterator.hasNext()){
+			int neighbor = iterator.next();
+			if(Math.abs(probs.get(neighbor) - prevProbs.get(neighbor)) >= Main.stabilityDiff){
+				return false;
+			}
+		}
+		return true;
 	}
 	
 	public int getTokenBucket(){
@@ -46,6 +83,8 @@ public class Node {
 				smallestTokenBucketValue = tokenBucketValue;
 			}
 		}
+		packetsPerLink.put(smallestTokenBucket, packetsPerLink.get(smallestTokenBucket) + 1);
+		packetsTotal++;
 		return smallestTokenBucket;
 	}
 	

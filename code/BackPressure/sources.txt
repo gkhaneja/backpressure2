@@ -1,5 +1,6 @@
 src/parn/main/Configurations.java
 src/parn/main/FlowMetric.java
+src/parn/main/FlowStat.java
 src/parn/main/Main.java
 src/parn/main/Metrics.java
 src/parn/node/Connection.java

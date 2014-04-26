@@ -27,12 +27,12 @@ public class Main {
 	//TODO: where are back pressure weighs calculated ? I have pnd's and pnj's. Where to calculate wnj[d] = pnd - pnj ?
 	//Done. In shadowPacketGenerator.
 	
-	//Data fields
+	//Entities
 	public static HashMap<Integer, Node> nodes;
 	public static HashMap<Integer, Neighbor> neighbors;
 	public static LinkedBlockingQueue<DataPacket> inputBuffer;
 	public static HashMap<Integer, ShadowQueue> shadowQueues;
-	public static HashMap<Integer, Flow> flows;
+	
 	
 	//Global variables
 	public static int ID;
@@ -40,20 +40,29 @@ public class Main {
 	public static int M;
 	public static double epsilon;
 	public static int Capacity;
+	public static double stabilityDiff = 0.02;
 
 	
 	
 	//Threads
 	public static Router router;
 	public static ShadowPacketGenerator shadowPacketGenerator;
+	public static HashMap<Integer, Flow> flows;
+	
 
 	//Locks and Notifiers
 	private static Object shadowQueueLock;
 	public static Object syncLock;
 	public static Object shadowQueueSendingNotification;
+	private static Object controlStatsLock = new Object();
 
 	//Shared and synchronized (lock protected) fields:
 	public static int nShadowQueueReceived;
+	
+	//Measurements
+	public static HashMap<Integer, FlowStat> flowStats = new HashMap<Integer, FlowStat>();
+	public static long nControlBytes=0;
+	public static int nControlPackets=0;
 
 	public static boolean init(int id, String confFile){
 		//TODO: change static id assignment: Done
@@ -145,6 +154,17 @@ public class Main {
 			syncLock.notify();
 		}
 		
+	}
+	
+	public static void updateControlStats(ControlPacket packet){
+		synchronized(Main.controlStatsLock){
+			try {
+				Main.nControlBytes += Main.sizeof(packet);
+				Main.nControlPackets++;
+			} catch (IOException e) {
+				System.out.println("ERROR: couldn't coount " + packet);
+			}
+		}
 	}
 	
 	public static void reset(){

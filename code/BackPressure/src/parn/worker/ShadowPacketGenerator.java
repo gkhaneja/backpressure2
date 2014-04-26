@@ -65,6 +65,11 @@ public class ShadowPacketGenerator extends Thread {
 						Main.shadowQueueSendingNotification.notifyAll();
 					}
 					Main.reset();
+					
+					//TODO: check if probabities are stabilized ?
+					if(checkStability()){
+						System.out.println("INFO: System is stable");
+					}
 				}
 				try {
 					Main.syncLock.wait();
@@ -75,6 +80,18 @@ public class ShadowPacketGenerator extends Thread {
 			}
 			
 		}
+		
+		
+	}
+	
+	public boolean checkStability(){
+		Iterator<Integer> iterator = Main.nodes.keySet().iterator();
+		boolean isStable = true;
+		while(iterator.hasNext()){
+			int node = iterator.next();
+			isStable = Main.nodes.get(node).updateProbs();
+		}
+		return isStable;
 	}
 
 }

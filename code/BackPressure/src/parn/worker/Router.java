@@ -1,8 +1,7 @@
 package parn.worker;
 
-import java.util.Iterator;
-
 import parn.main.Configurations;
+import parn.main.FlowStat;
 import parn.main.Main;
 import parn.node.Neighbor;
 import parn.node.Node;
@@ -50,7 +49,13 @@ public class Router extends Thread {
 	
 	public void consumePacket(DataPacket packet){
 		//TODO: consume packet, update end-to-end metrics
+		//TODO: Assuming at most one flow source
 		System.out.println("Consuming " + packet);
+		if(Main.flowStats.containsKey(packet.source)){
+			Main.flowStats.get(packet.source).addPacket(packet);
+		}else{
+			Main.flowStats.put(packet.source, new FlowStat(packet));
+		}
 	}
 	
 	public String toString(){
