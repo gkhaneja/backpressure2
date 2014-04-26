@@ -1,9 +1,12 @@
 package parn.main;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.net.InetAddress;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -218,7 +221,7 @@ public class Main {
 			int nodeId = nodeIterator.next();
 			if(Main.ID!=nodeId){
 				int flowId = Main.getNextFlowID();
-				Flow flow = new Flow(flowId, Main.ID, nodeId, 10);
+				Flow flow = new Flow(flowId, Main.ID, nodeId, 0.1);
 				flows.put(flowId, flow);
 				flow.start();
 			}
@@ -234,6 +237,18 @@ public class Main {
 		return newFlowId;
 	}
 
+	public static int sizeof(Object obj) throws IOException {
+
+        ByteArrayOutputStream byteOutputStream = new ByteArrayOutputStream();
+        ObjectOutputStream objectOutputStream = new ObjectOutputStream(byteOutputStream);
+
+        objectOutputStream.writeObject(obj);
+        objectOutputStream.flush();
+        objectOutputStream.close();
+
+        return byteOutputStream.toByteArray().length;
+    }
+	
 	static void printNeighbors(){
 		System.out.println("Neighbors:");
 		Iterator<Integer> neighborIterator = neighbors.keySet().iterator();

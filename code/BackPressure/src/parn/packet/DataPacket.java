@@ -31,6 +31,7 @@ public class DataPacket implements Serializable {
 		this.sequenceNumber = sequenceNumber;
 		path = new ArrayList<Integer>();
 		time = System.currentTimeMillis();
+		//TODO: I think arrays are initialized by default. Confirm this by measuring size.
 		payload = new byte[Configurations.PAYLOAD_SIZE];
 	}
 
