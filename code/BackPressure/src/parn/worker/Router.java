@@ -11,6 +11,15 @@ public class Router extends Thread {
 	
 	public void run(){
 		while(!Configurations.SYSTEM_HALT){
+			
+			//System.out.println("INFO: " + (System.currentTimeMillis() - Main.startTime) + " " + Main.stopTime );
+			  if (System.currentTimeMillis() - Main.startTime > Main.stopTime){
+	                Configurations.SYSTEM_HALT = true;
+	                //System.out.println("INFO: Stopping the system");
+	                CommandPromt.printStats();
+	                continue;
+	            }
+			
 			if(Configurations.DEBUG_ON){
 				try{
 					sleep(Configurations.SLOW_DOWN_FACTOR);

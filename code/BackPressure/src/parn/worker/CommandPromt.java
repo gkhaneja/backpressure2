@@ -25,7 +25,7 @@ public class CommandPromt extends Thread {
 		}
 	}
 	
-	public void printStats(){
+	public  static void printStats(){
 		System.out.println("No. of iterations: " + Main.shadowPacketGenerator.iteration );
 		System.out.println("Stable iteration: " + Configurations.stableIterations);
 		System.out.println("Stable time: " + Configurations.stableTime);

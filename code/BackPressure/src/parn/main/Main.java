@@ -313,6 +313,7 @@ public class Main {
 				int destination = iterator.next();
 				int nPackets = packet.shadowPackets.get(destination);
 				Main.shadowPacketsReceived += nPackets;
+				System.out.println("DEBUG: " + Main.shadowPacketsReceived);
 				if(destination==Main.ID){
 					continue;
 				}

@@ -44,6 +44,7 @@ public class ControlPacketSender extends Thread{
 				break;
 			}
 			
+			System.out.println("DEBUG: " + this + " Waiting...");
 			//TODO: Should we have event listening model ? or should we keep sending it at regular intervals ? I think it should be based on updates (event). But keeping latter for now.
 			//solution: Having it based on notifications.
 			try {

@@ -39,7 +39,7 @@ public class Flow extends Thread {
 			DataPacket packet = new DataPacket(id, source, destination, sequenceNumber++);
 			try {
 				Main.inputBuffer.put(packet);
-				System.out.println("Generated " + packet);
+				//System.out.println("Generated " + packet);
 				//TODO: Add Shadow Packets
 				if(rand.nextDouble() < Main.epsilon){
 					Main.addShadowPackets(destination, 2);

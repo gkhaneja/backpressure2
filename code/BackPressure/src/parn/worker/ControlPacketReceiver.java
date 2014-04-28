@@ -25,7 +25,7 @@ public class ControlPacketReceiver extends Thread {
 				//System.out.println("Size of object: " + Main.sizeof(packet));
 				//TODO: Inefficient step - 
 				Main.updateControlReceiverStats(packet);
-				System.out.println(this + " received " + packet);
+				System.out.println("DEBUG: " + this + " received " + packet);
 				if(packet.type == Configurations.SHADOW_QUEUE_TYPE){
 					neighbor.updateShadowQueue(packet);
 				}else { 

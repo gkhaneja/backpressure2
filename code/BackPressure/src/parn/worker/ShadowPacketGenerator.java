@@ -23,18 +23,14 @@ public class ShadowPacketGenerator extends Thread {
 		//Loop - check if Main.nShadowPacketReceived == #neighbor, then, Apply BackPressure algorithm: 
 		//Calculate shadow packets, Update shadow queue, and send shadow packets to neighbors, followed by shadow queue
 		while(!Configurations.SYSTEM_HALT){
-            System.out.println("INFO: " + Main.startTime + " " + Main.stopTime + " " + System.currentTimeMillis());
-			  if (System.currentTimeMillis() - Main.startTime > Main.stopTime){
-	                Configurations.SYSTEM_HALT = true;
-	                System.out.println("INFO: Stopping the system");
-	                continue;
-	            }
+            
 			
 			synchronized(Main.syncLock){
+				System.out.println("DEBUG: ShadowPacketGenerator: Waiting...");
 				if(Main.nShadowQueueReceived == Main.neighbors.size()){
 					iteration++;
 					
-					System.out.print(this);
+					System.out.print("DEBUG: " + this);
 					Iterator<Integer> iterator = Main.neighbors.keySet().iterator();
 					while(iterator.hasNext()){
 						Neighbor neighbor = Main.neighbors.get(iterator.next());
