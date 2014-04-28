@@ -17,7 +17,7 @@ public class DataPacket implements Serializable {
 	int hops;
 	public int destination;
 	public int sequenceNumber;
-	public ArrayList<Integer> path;
+	public ArrayList<Character> path;
 	public long time;
 	public byte[] payload;
 	
@@ -29,7 +29,7 @@ public class DataPacket implements Serializable {
 		this.ttl = Configurations.MAX_HOP;
 		this.hops=0;
 		this.sequenceNumber = sequenceNumber;
-		path = new ArrayList<Integer>();
+		path = new ArrayList<Character>();
 		time = System.currentTimeMillis();
 		//TODO: I think arrays are initialized by default. Confirm this by measuring size.
 		payload = new byte[Configurations.PAYLOAD_SIZE];
@@ -42,7 +42,7 @@ public class DataPacket implements Serializable {
 		this.ttl = Configurations.MAX_HOP;
 		this.hops=0;
 		this.sequenceNumber = sequenceNumber;
-		path = new ArrayList<Integer>();
+		path = new ArrayList<Character>();
 		time = System.currentTimeMillis();
 		payload = new byte[payloadSize];
 	}

@@ -18,7 +18,7 @@ public class DataPacketSender extends Thread {
 
 	public void run(){
 		//System.out.println(this + " is starting.");
-		while(true){
+		while(!Configurations.SYSTEM_HALT){
 			//System.out.println(this + " is running");
 			if(Configurations.DEBUG_ON){
 				try{

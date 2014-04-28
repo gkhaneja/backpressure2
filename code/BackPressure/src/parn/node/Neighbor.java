@@ -44,6 +44,12 @@ public class Neighbor extends Thread {
 	//Lengths of shadowQueues for each destination for each neighbor are maintained here
 	public HashMap<Integer, ShadowQueue> shadowQueues;
 	
+	//measurements
+	//public int nDataPackets=0;
+	//public int rate=0;
+	
+	
+	//public 
 
 	//public static void main(String[] args){
 		//ServerSocket listener

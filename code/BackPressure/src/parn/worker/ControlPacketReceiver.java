@@ -18,13 +18,13 @@ public class ControlPacketReceiver extends Thread {
 	
 	public void run(){
 		//System.out.println(this + " is starting.");
-		while(true){
+		while(!Configurations.SYSTEM_HALT){
 			//System.out.println(this + " is running");
 			try {
 				ControlPacket packet = (ControlPacket) connection.readObject();
 				//System.out.println("Size of object: " + Main.sizeof(packet));
 				//TODO: Inefficient step - 
-				Main.updateControlStats(packet);
+				Main.updateControlReceiverStats(packet);
 				System.out.println(this + " received " + packet);
 				if(packet.type == Configurations.SHADOW_QUEUE_TYPE){
 					neighbor.updateShadowQueue(packet);

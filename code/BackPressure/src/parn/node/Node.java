@@ -5,6 +5,7 @@ import java.net.InetAddress;
 import java.util.HashMap;
 import java.util.Iterator;
 
+import parn.main.Configurations;
 import parn.main.Main;
 
 public class Node {
@@ -17,8 +18,8 @@ public class Node {
 	private HashMap<Integer, Integer> tokenBuckets;
 	
 	//packet counts
-	private HashMap<Integer, Integer> packetsPerLink;
-	private int packetsTotal;
+	public HashMap<Integer, Integer> packetsPerLink;
+	public int packetsTotal;
 	
 	//ratios
 	HashMap<Integer, Double> probs;
@@ -54,16 +55,32 @@ public class Node {
 		Iterator<Integer> iterator = packetsPerLink.keySet().iterator();
 		while(iterator.hasNext()){
 			int neighbor = iterator.next();
-			prevProbs.put(neighbor, probs.get(neighbor));
-			probs.put(neighbor, (packetsPerLink.get(neighbor)*1.0) / (1.0*packetsTotal));
+			double oldProb = probs.get(neighbor);
+			prevProbs.put(neighbor, oldProb);
+			double newProb=0;
+			if(packetsTotal!=0){
+				newProb = (packetsPerLink.get(neighbor)*1.0) / (1.0*packetsTotal);
+			}
+			probs.put(neighbor, newProb);
+			//System.out.println("old - " + oldProb + ". new - " + newProb);
 		}
+		//printProbs();
 		return checkStability();
 	}
 	
+	public void printProbs(){
+		String ret = Configurations.hashToString(packetsPerLink);
+		System.out.println(this + ": " + ret);
+	}
+	
 	public boolean checkStability(){
+		if(packetsTotal==0 && id!=Main.ID){
+			return false;
+		}
 		Iterator<Integer> iterator = packetsPerLink.keySet().iterator();
 		while(iterator.hasNext()){
 			int neighbor = iterator.next();
+			//System.out.println("Stability check: " + probs.get(neighbor) + " " + prevProbs.get(neighbor));
 			if(Math.abs(probs.get(neighbor) - prevProbs.get(neighbor)) >= Main.stabilityDiff){
 				return false;
 			}

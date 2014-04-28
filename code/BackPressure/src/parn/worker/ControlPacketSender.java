@@ -23,7 +23,7 @@ public class ControlPacketSender extends Thread{
 	
 	public void run(){
 		//System.out.println(this + " is starting.");
-		while(true){
+		while(!Configurations.SYSTEM_HALT){
 			//System.out.println(this + " is running");
 			try{
 				sleep(Configurations.CONTROL_PACKET_INTERVAL);
@@ -36,6 +36,7 @@ public class ControlPacketSender extends Thread{
 			ControlPacket packet = new ControlPacket(Main.ID, neighbor.node.id, Configurations.SHADOW_QUEUE_TYPE);
 			try {
 				connection.writeObject(packet);
+				Main.updateControlSenderStats(packet);
 			} catch (IOException e) {
 				System.out.println(this + ": Error sending " + packet);
 				//TODO: comment stack trace, may be

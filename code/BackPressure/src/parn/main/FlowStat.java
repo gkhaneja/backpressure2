@@ -55,11 +55,24 @@ public class FlowStat {
 			this.pathLength = (this.nPackets*this.pathLength + packet.path.size()) / (this.nPackets+1);
 			this.travelTime = (this.nPackets*this.travelTime + (System.currentTimeMillis() - packet.time))/(this.nPackets + 1);
 			this.nPackets++;
+			System.out.println("Data packet sizes: " + Main.sizeof(packet) + ", " + packet.payload.length);
 		} catch (IOException e) {
 			System.out.println("ERROR: couldn't coount " + packet);
 		}
 		
 	}
 	
+	public String toString(){
+		String ret = "[";
+		ret += "flowId:" + flowId + ", ";
+		ret += "source:" + source + ", ";
+		ret += "dest:" + destination + ", ";
+		ret += "nPackets:" + nPackets + ", ";
+		ret += "nBytes:" + nBytes + ", ";
+		ret += "nPayLoadBytes:" + nPayloadBytes + ", ";
+		ret += "pathLength:" + pathLength + ", ";
+		ret += "travelTime:" + travelTime + "]";
+		return ret;
+	}
 	
 }

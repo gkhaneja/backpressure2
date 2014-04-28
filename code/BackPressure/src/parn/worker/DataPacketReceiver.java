@@ -3,6 +3,7 @@ package parn.worker;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 
+import parn.main.Configurations;
 import parn.main.Main;
 import parn.node.Neighbor;
 import parn.packet.DataPacket;
@@ -18,7 +19,7 @@ public class DataPacketReceiver extends Thread {
 	
 	public void run(){
 		//System.out.println(this + " is starting.");
-		while(true){
+		while(!Configurations.SYSTEM_HALT){
 			//System.out.println(this + " is running");
 			try {
 				DataPacket packet = (DataPacket) connection.readObject();

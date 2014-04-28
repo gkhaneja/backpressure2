@@ -10,7 +10,7 @@ import parn.packet.DataPacket;
 public class Router extends Thread {
 	
 	public void run(){
-		while(true){
+		while(!Configurations.SYSTEM_HALT){
 			if(Configurations.DEBUG_ON){
 				try{
 					sleep(Configurations.SLOW_DOWN_FACTOR);
@@ -22,7 +22,8 @@ public class Router extends Thread {
 			DataPacket packet = Main.inputBuffer.poll();
 			if(packet==null) continue;
 			//TokenBucket algorithm
-			packet.path.add(Main.ID);		
+			packet.path.add((char) Main.ID);	
+			Main.dataPacketsReceived++;
 			if(packet.destination == Main.ID){
 				consumePacket(packet);
 			} else if(Main.nodes.containsKey(packet.destination)){
@@ -32,6 +33,7 @@ public class Router extends Thread {
 				Neighbor neighbor = Main.neighbors.get(link);
 				System.out.println("Router: routing " + packet + " to " + neighbor);
 				try {
+					Main.dataPacketsSent++;
 					neighbor.realQueue.put(packet);
 				} catch (InterruptedException e) {
 					System.out.println(this + ": Error transferring " + packet);
@@ -48,13 +50,12 @@ public class Router extends Thread {
 	}
 	
 	public void consumePacket(DataPacket packet){
-		//TODO: consume packet, update end-to-end metrics
 		//TODO: Assuming at most one flow source
 		System.out.println("Consuming " + packet);
-		if(Main.flowStats.containsKey(packet.source)){
-			Main.flowStats.get(packet.source).addPacket(packet);
+		if(Main.flowStatReceived.containsKey(packet.source)){
+			Main.flowStatReceived.get(packet.source).addPacket(packet);
 		}else{
-			Main.flowStats.put(packet.source, new FlowStat(packet));
+			Main.flowStatReceived.put(packet.source, new FlowStat(packet));
 		}
 	}
 	

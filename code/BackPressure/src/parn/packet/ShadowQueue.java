@@ -17,12 +17,24 @@ public class ShadowQueue implements Serializable {
 		this.length = length;
 	}
 	
-	public void update(int change){
-		length += change; 
+	public int update(int change){
+		
 		//TODO: Not sure about this check
-		if(length < 0){
-			System.out.println("ERROR: " + this);
+		if(change < 0){
+			if(change + length < 0){
+				System.out.println("ERROR: " + this);
+				int temp = length;
+				length=0;
+				return temp;
+			}else{
+				length += change;
+				return -1*change;
+			}
+			
 		}
+		
+		length += change; 
+		return change;
 	}
 	
 	public String toString(){

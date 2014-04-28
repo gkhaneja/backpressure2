@@ -2,6 +2,7 @@ package parn.worker;
 
 import java.util.Random;
 
+import parn.main.Configurations;
 import parn.main.Main;
 import parn.packet.DataPacket;
 
@@ -28,7 +29,7 @@ public class Flow extends Thread {
 		Random rand = new Random();
 		int sleepTime =  (int) ((int) 1.0/rate);
 		//System.out.println("Sleep time is " + sleepTime);
-		while(true){
+		while(!Configurations.SYSTEM_HALT){
 			//TODO: Add randomness according to conf file
 			try{
 				sleep(sleepTime*1000);
@@ -42,8 +43,12 @@ public class Flow extends Thread {
 				//TODO: Add Shadow Packets
 				if(rand.nextDouble() < Main.epsilon){
 					Main.addShadowPackets(destination, 2);
+					
 				}else{
 					Main.addShadowPackets(destination, 1);
+				}
+				synchronized(Main.dataPacketStatLock){
+					Main.dataPacketsGenerated++;
 				}
 			} catch (InterruptedException e) {
 				System.out.println(this + " Error adding packet to input buffer");

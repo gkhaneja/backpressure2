@@ -8,6 +8,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Random;
@@ -18,14 +19,13 @@ import parn.node.Node;
 import parn.packet.ControlPacket;
 import parn.packet.DataPacket;
 import parn.packet.ShadowQueue;
+import parn.worker.CommandPromt;
 import parn.worker.Flow;
 import parn.worker.Router;
 import parn.worker.ShadowPacketGenerator;
 
 public class Main {
 
-	//TODO: where are back pressure weighs calculated ? I have pnd's and pnj's. Where to calculate wnj[d] = pnd - pnj ?
-	//Done. In shadowPacketGenerator.
 	
 	//Entities
 	public static HashMap<Integer, Node> nodes;
@@ -41,6 +41,10 @@ public class Main {
 	public static double epsilon;
 	public static int Capacity;
 	public static double stabilityDiff = 0.02;
+	public static long bandwidth = 1000000000 / 8;
+	public static int usePropSplitting = 0;
+	public static int initializeShadowQueues = 0;
+	public static long stopTime = 0;
 
 	
 	
@@ -48,21 +52,47 @@ public class Main {
 	public static Router router;
 	public static ShadowPacketGenerator shadowPacketGenerator;
 	public static HashMap<Integer, Flow> flows;
+	public static CommandPromt commandPromt = new CommandPromt();
 	
 
 	//Locks and Notifiers
 	private static Object shadowQueueLock;
 	public static Object syncLock;
 	public static Object shadowQueueSendingNotification;
-	private static Object controlStatsLock = new Object();
-
+	private static Object controlReceiverStatsLock = new Object();
+	private static Object controlSenderStatsLock = new Object();
+	
 	//Shared and synchronized (lock protected) fields:
 	public static int nShadowQueueReceived;
 	
-	//Measurements
-	public static HashMap<Integer, FlowStat> flowStats = new HashMap<Integer, FlowStat>();
-	public static long nControlBytes=0;
-	public static int nControlPackets=0;
+	//Measurements per flow
+	public static HashMap<Integer, FlowStat> flowStatReceived = new HashMap<Integer, FlowStat>();
+	
+	
+	
+	//Measurements for shadow packets
+	//Can use the shadowQueueLock itself
+	public static int shadowPacketsGenerated=0;
+	public static int extraShadowPacketsGenerated=0;
+	public static int shadowPacketsReceived=0;
+	//No locking required for this one - since a single thread - ShadowQueueGenerator will generate shadow packets 
+	public static int shadowPacketsSent=0;
+	
+	
+	//Measurements for data packets
+	public static int dataPacketsGenerated=0;
+	public static Object dataPacketStatLock = new Object();
+	public static int dataPacketsSent=0;
+	public static int dataPacketsReceived=0;
+	public static int dataPacketSize=930;
+	//Not being used 
+	public static int averageDataPacketSize=0;
+	
+	//Measurements for control packets
+	public static int controlPacketsSent=0;
+	public static int controlPacketsReceived=0;
+	public static int controlBytesSent=0;
+	public static int controlBytesReceived=0;
 
 	public static boolean init(int id, String confFile){
 		//TODO: change static id assignment: Done
@@ -101,10 +131,63 @@ public class Main {
 		
 		shadowPacketGenerator.start();
 		router.start();
+		commandPromt.start();
 
 		//printNodes();
 		//printNeighbors();
 
+		return true;
+	}
+	
+	public static InetAddress getAddress(String ip) throws UnknownHostException{
+		String[] addrStr = ip.split("\\.");
+		//System.out.println(addrStr.length + " " + parts[1]);
+		byte[] addrByte = new byte[4];
+		for (int i=0;i<4;i++){
+			addrByte[i] = Byte.parseByte(addrStr[i]);
+		}									
+		InetAddress address = InetAddress.getByAddress(addrByte);
+		return address;
+	}
+	
+	public static boolean parseConfFile2(String confFile){
+		try{
+			BufferedReader reader = new BufferedReader(new FileReader(new File(confFile)));
+			String line;
+			String[] parts;
+ 			//first line contains M, epsilon, prop, pathlength, time
+			line = reader.readLine();
+			parts = line.split("\t");
+			Main.M = Integer.parseInt(parts[0]);
+			Main.epsilon = Double.parseDouble(parts[1]);
+			Main.usePropSplitting = Integer.parseInt(parts[2]);
+			Main.initializeShadowQueues = Integer.parseInt(parts[3]);
+			Main.stopTime = Long.parseLong(parts[4]);
+			
+			line = reader.readLine();
+			parts = line.split("\t");
+			Main.ID = Integer.parseInt(parts[1]);
+			
+			line = reader.readLine();
+			parts = line.split("\t");			
+			nodes.put(Main.ID, new Node(Main.ID, Main.getAddress(parts[1])));
+			
+			line = reader.readLine();
+			parts = line.split("\t");			
+			int nNeighbors = Integer.parseInt(parts[1]);			
+			for(int i=0; i<nNeighbors; i++){
+				line = reader.readLine();
+			}
+			
+			reader.close();
+		}catch(FileNotFoundException e){
+			e.printStackTrace();
+			return false;
+		}catch(Exception e){
+			System.out.println("File not formatted correctly");
+			e.printStackTrace();
+			return false;
+		}
 		return true;
 	}
 	
@@ -156,11 +239,22 @@ public class Main {
 		
 	}
 	
-	public static void updateControlStats(ControlPacket packet){
-		synchronized(Main.controlStatsLock){
+	public static void updateControlReceiverStats(ControlPacket packet){
+		synchronized(Main.controlReceiverStatsLock){
 			try {
-				Main.nControlBytes += Main.sizeof(packet);
-				Main.nControlPackets++;
+				Main.controlBytesReceived += Main.sizeof(packet);
+				Main.controlPacketsReceived++;
+			} catch (IOException e) {
+				System.out.println("ERROR: couldn't coount " + packet);
+			}
+		}
+	}
+	
+	public static void updateControlSenderStats(ControlPacket packet){
+		synchronized(Main.controlSenderStatsLock){
+			try {
+				Main.controlBytesSent += Main.sizeof(packet);
+				Main.controlPacketsSent++;
 			} catch (IOException e) {
 				System.out.println("ERROR: couldn't coount " + packet);
 			}
@@ -187,15 +281,21 @@ public class Main {
 			return;
 		}
 		
+		if(packet.shadowPackets.size() > 1){
+			System.out.println("INFO: Proportional splitting is ON");
+		}
+		
 		synchronized(shadowQueueLock){
-			Iterator<Integer> iterator = packet.shadowPackets.keySet().iterator();
+			Iterator<Integer> iterator = packet.shadowPackets.keySet().iterator();			
 			while(iterator.hasNext()){
 				int destination = iterator.next();
+				int nPackets = packet.shadowPackets.get(destination);
+				Main.shadowPacketsReceived += nPackets;
 				if(destination==Main.ID){
 					continue;
 				}
 				if(shadowQueues.containsKey(destination)){
-					shadowQueues.get(destination).update(packet.shadowPackets.get(destination));//, change + shadowQueues.get(desti))
+					shadowQueues.get(destination).update(nPackets);
 				}	
 			}
 			
@@ -204,15 +304,19 @@ public class Main {
 	
 	//Just used by flow generators to add shadow packets to shadow queues
 	public static void addShadowPackets(int destination, int nShadowPackets){
-		//System.out.print("Trying to Shadow Packets. ");
-		//TODO: We should consume our packets, right ?
+		
+		
 		if(destination==Main.ID){
 			return;
 		}
 		synchronized(shadowQueueLock){
 			if(shadowQueues.containsKey(destination)){
 				shadowQueues.get(destination).update(nShadowPackets);
-				//System.out.println("Added.");
+				if(nShadowPackets==2){
+					Main.extraShadowPacketsGenerated++;
+				}
+				Main.shadowPacketsGenerated += nShadowPackets;
+				
 			}
 		}
 		

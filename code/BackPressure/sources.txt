@@ -9,6 +9,7 @@ src/parn/node/Node.java
 src/parn/packet/ControlPacket.java
 src/parn/packet/DataPacket.java
 src/parn/packet/ShadowQueue.java
+src/parn/worker/CommandPromt.java
 src/parn/worker/ControlPacketReceiver.java
 src/parn/worker/ControlPacketSender.java
 src/parn/worker/DataPacketReceiver.java
