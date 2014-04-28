@@ -45,6 +45,7 @@ public class Main {
 	public static int usePropSplitting = 0;
 	public static int initializeShadowQueues = 0;
 	public static long stopTime = 0;
+	public static long startTime = System.currentTimeMillis();
 
 	
 	
