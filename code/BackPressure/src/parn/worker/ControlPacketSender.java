@@ -28,25 +28,23 @@ public class ControlPacketSender extends Thread{
 			try{
 				sleep(Configurations.CONTROL_PACKET_INTERVAL);
 			}catch(InterruptedException e){
-				System.out.println(this + " got interrupted");
+				System.out.println("CONTROL: " + this + " got interrupted");
 			}
 			
 			
 			
 			ControlPacket packet = new ControlPacket(Main.ID, neighbor.node.id, Configurations.SHADOW_QUEUE_TYPE);
 			try {
+				System.out.println("CONTROL: " + this + " sending " + packet);
 				connection.writeObject(packet);
 				Main.updateControlSenderStats(packet);
 			} catch (IOException e) {
-				System.out.println(this + ": Error sending " + packet);
-				//TODO: comment stack trace, may be
+				System.out.println("CONTROL: " + this + ": Error sending " + packet);
 				e.printStackTrace();
 				break;
 			}
 			
-			System.out.println("DEBUG: " + this + " Waiting...");
-			//TODO: Should we have event listening model ? or should we keep sending it at regular intervals ? I think it should be based on updates (event). But keeping latter for now.
-			//solution: Having it based on notifications.
+	
 			try {
 				synchronized(Main.shadowQueueSendingNotification){
 					Main.shadowQueueSendingNotification.wait();
@@ -54,6 +52,12 @@ public class ControlPacketSender extends Thread{
 			} catch (InterruptedException e1) {
 				e1.printStackTrace();
 			}
+		}
+		try {
+			connection.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 	

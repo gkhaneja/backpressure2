@@ -24,19 +24,26 @@ public class DataPacketSender extends Thread {
 				try{
 					sleep(Configurations.SLOW_DOWN_FACTOR);
 				}catch(InterruptedException e){
-					System.out.println(this + " got interrupted");
+					System.out.println("DATA: " + this + " got interrupted");
 				}
 			}
 
 			DataPacket packet = neighbor.realQueue.poll();
 			if(packet==null) continue;
 			try {
+				System.out.println("DATA: " + this + " sending " + packet);
 				connection.writeObject(packet);
 			} catch (IOException e) {
-				System.out.println(this + ": Error sending " + packet);
+				System.out.println("DATA: " + this + ": Error sending " + packet);
 				e.printStackTrace();
 				break;
 			}
+		}
+		try {
+			connection.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 

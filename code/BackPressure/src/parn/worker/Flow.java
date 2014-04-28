@@ -39,7 +39,7 @@ public class Flow extends Thread {
 			DataPacket packet = new DataPacket(id, source, destination, sequenceNumber++);
 			try {
 				Main.inputBuffer.put(packet);
-				//System.out.println("Generated " + packet);
+				//System.out.println("DATA: Generated " + packet);
 				//TODO: Add Shadow Packets
 				if(rand.nextDouble() < Main.epsilon){
 					Main.addShadowPackets(destination, 2);
@@ -51,7 +51,7 @@ public class Flow extends Thread {
 					Main.dataPacketsGenerated++;
 				}
 			} catch (InterruptedException e) {
-				System.out.println(this + " Error adding packet to input buffer");
+				System.out.println("DATA: " + this + " Error adding packet to input buffer");
 				e.printStackTrace();
 			}
 		}

@@ -63,7 +63,7 @@ public class FlowStat {
 	}
 	
 	public String toString(){
-		String ret = "[";
+		String ret = "STAT: [";
 		ret += "flowId:" + flowId + ", ";
 		ret += "source:" + source + ", ";
 		ret += "dest:" + destination + ", ";

@@ -17,6 +17,7 @@ public class Router extends Thread {
 	                Configurations.SYSTEM_HALT = true;
 	                //System.out.println("INFO: Stopping the system");
 	                CommandPromt.printStats();
+	                System.exit(0);
 	                continue;
 	            }
 			
@@ -24,7 +25,7 @@ public class Router extends Thread {
 				try{
 					sleep(Configurations.SLOW_DOWN_FACTOR);
 				}catch(InterruptedException e){
-					System.out.println(this + " got interrupted");
+					System.out.println("DATA: Router: Got interrupted");
 				}
 			}
 			
@@ -40,16 +41,16 @@ public class Router extends Thread {
 				int link = destination.getTokenBucket();
 				
 				Neighbor neighbor = Main.neighbors.get(link);
-				System.out.println("Router: routing " + packet + " to " + neighbor);
+				System.out.println("DATA: Router: routing " + packet + " to " + neighbor);
 				try {
 					Main.dataPacketsSent++;
 					neighbor.realQueue.put(packet);
 				} catch (InterruptedException e) {
-					System.out.println(this + ": Error transferring " + packet);
+					System.out.println("DATA: Router: Error transferring " + packet);
 					e.printStackTrace();
 				}
 			}else{
-				System.out.println("Unknown destination. Dropping " + packet);
+				System.out.println("DATA: Router: Unknown destination. Dropping " + packet);
 			}
 			
 			
@@ -60,7 +61,7 @@ public class Router extends Thread {
 	
 	public void consumePacket(DataPacket packet){
 		//TODO: Assuming at most one flow source
-		System.out.println("Consuming " + packet);
+		System.out.println("DATA: Consuming " + packet);
 		if(Main.flowStatReceived.containsKey(packet.source)){
 			Main.flowStatReceived.get(packet.source).addPacket(packet);
 		}else{

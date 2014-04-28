@@ -1,5 +1,6 @@
 package parn.worker;
 
+import java.io.IOException;
 import java.io.ObjectInputStream;
 
 import parn.main.Configurations;
@@ -22,20 +23,26 @@ public class ControlPacketReceiver extends Thread {
 			//System.out.println(this + " is running");
 			try {
 				ControlPacket packet = (ControlPacket) connection.readObject();
-				//System.out.println("Size of object: " + Main.sizeof(packet));
-				//TODO: Inefficient step - 
+				
+				
 				Main.updateControlReceiverStats(packet);
-				System.out.println("DEBUG: " + this + " received " + packet);
+				System.out.println("CONTROL: " + this + " received " + packet);
 				if(packet.type == Configurations.SHADOW_QUEUE_TYPE){
 					neighbor.updateShadowQueue(packet);
 				}else { 
 					Main.updateShadowQueue(packet);
 				}
 			} catch (Exception e) {
-				System.out.println(this + " Error receving data packets");
-				e.printStackTrace();
+				System.out.println("CONTROL: " + this + " Error receving data packets");
+				//e.printStackTrace();
 				break;
 			}
+		}
+		try {
+			connection.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 	

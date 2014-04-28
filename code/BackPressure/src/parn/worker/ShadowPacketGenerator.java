@@ -14,7 +14,7 @@ public class ShadowPacketGenerator extends Thread {
 	public long time=System.currentTimeMillis();
 	
 	public String toString(){
-		return "ShadowPacketGenerator[" + iteration + "]"; 
+		return "ShadowPacketGenerator[" + iteration + "]: "; 
 	}
 	
 	public void run(){
@@ -26,11 +26,11 @@ public class ShadowPacketGenerator extends Thread {
             
 			
 			synchronized(Main.syncLock){
-				System.out.println("DEBUG: ShadowPacketGenerator: Waiting...");
+				
 				if(Main.nShadowQueueReceived == Main.neighbors.size()){
 					iteration++;
 					
-					System.out.print("DEBUG: " + this);
+					System.out.println("CONTROL: " + this + "       time:  " + (System.currentTimeMillis() - Main.startTime));
 					Iterator<Integer> iterator = Main.neighbors.keySet().iterator();
 					while(iterator.hasNext()){
 						Neighbor neighbor = Main.neighbors.get(iterator.next());
@@ -52,55 +52,65 @@ public class ShadowPacketGenerator extends Thread {
 							int nShadowPackets = Main.Capacity;
 							if(Configurations.DEBUG_ON){
 								nShadowPackets = (int) ((System.currentTimeMillis() - time) / Configurations.SLOW_DOWN_FACTOR);
-								System.out.println("DEBUG MODE: #Shadow packets " + nShadowPackets);
+								System.out.print("\tCONTROL: " + this + " DEBUG MODE: "  + nShadowPackets + " generated for  " + winnerDest);
 							}else{
 								nShadowPackets = (int) ((System.currentTimeMillis() - time)* Main.bandwidth / (2*Main.neighbors.size() * Main.dataPacketSize));
+								System.out.print("\tCONTROL: " + this + " REAL MODE: "  + nShadowPackets + " generated for  " + winnerDest);
 							}
 							
 							//TODO: lock for shadow queue
 							nShadowPackets = Main.shadowQueues.get(winnerDest).update(-1*nShadowPackets);
-							System.out.println("Actual Shadow Packets " + nShadowPackets);
+							System.out.print(". Actual Shadow Packets sent: " + nShadowPackets);
 							Main.shadowPacketsSent += nShadowPackets;
 							HashMap<Integer, Integer> shadowPackets = new HashMap<Integer, Integer>();
 							Node winnerNode = Main.nodes.get(winnerDest);
 							winnerNode.updateTokenBucket(neighbor.node.id, -1*nShadowPackets);
 							shadowPackets.put(winnerDest, nShadowPackets);
-							System.out.print(" Sending " + nShadowPackets + " SahdowPackets to " + neighbor);
+							System.out.println(". Sending " + nShadowPackets + " ShadowPackets to " + neighbor);
 							neighbor.sendShadowPackets(shadowPackets);
 							
 						}else{
-							System.out.print(" No packets for " + neighbor);
+							System.out.print("CONTROL: " + this + " No shadow packets for " + neighbor);
 						}
 						
 					}
 					time = System.currentTimeMillis();
 					System.out.println();
-					//TODO: send shadowQueues
-					//set a sync variable (with locks), on which controlpacketsenders are waiting.
-					//Done.
+					
+					//Main.reset();
+					Main.nShadowQueueReceived=0;
+					Iterator<Neighbor> iterator2 = Main.neighbors.values().iterator();
+					while(iterator2.hasNext()){
+						iterator2.next().reset();
+					}
+					System.out.println("CONTROL: " + this + " iteration ended");
+					
+					
 					synchronized(Main.shadowQueueSendingNotification){
 						Main.shadowQueueSendingNotification.notifyAll();
 					}
-					Main.reset();
+					
 					
 					//TODO: check if probabilities are stabilized ?
 					if(checkStability()){
 						if(!Configurations.isStable){
-							System.out.println("INFO: System is stable");
+							System.out.println("\tCONTROL: " + this + " System is stable");
 							Configurations.isStable = true;
 							Configurations.stableIterations = iteration;
 							Configurations.stableTime = System.currentTimeMillis() - Configurations.startTime;
 						}else{
-							
+							System.out.println("\tCONTROL: " + this + " System remains stable");
 						}
 						
 					}else{
 						if(!Configurations.isStable){
-							System.out.println("NOT stable yet");
+							System.out.println("\tCONTROL: " + this + " System is NOT stable yet");
 						}else{
-							System.out.println("ERROR: System went from stable to unstable");
+							System.out.println("\tCONTROL: " + this + " ERROR: System went from stable to unstable");
+							Main.error = true;
 						}
 					}
+					
 				}
 				try {
 					Main.syncLock.wait();

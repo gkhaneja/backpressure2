@@ -46,6 +46,7 @@ public class Main {
 	public static int initializeShadowQueues = 0;
 	public static long stopTime = 0;
 	public static long startTime = System.currentTimeMillis();
+	public static boolean error = false;
 
 	
 	
@@ -110,20 +111,22 @@ public class Main {
 		M=0;
 		epsilon=0.1;
 		//TODO: change this. For testing.
-		Capacity = 1;
-		
+		Capacity = 1;	
 		shadowQueueLock= new Object();
 		syncLock = new Object();
 		shadowQueueSendingNotification = new Object();
 		
 		if(!parseConfFile2(confFile)) return false;
 		
-		
+		//Initializations
+		initNeighbors();			
 		Iterator<Integer> iterator = nodes.keySet().iterator();
 		while(iterator.hasNext()){
 			nodes.get(iterator.next()).init();
 		}
-		
+		printNodes();
+		printNeighbors();
+		System.out.println("Given id: " + Main.ID);
 		System.out.println("No. of nodes: " + nodes.size());
 		System.out.println("No. of neighbors: " + neighbors.size());
 
@@ -134,8 +137,7 @@ public class Main {
 		router.start();
 		commandPromt.start();
 
-		printNodes();
-		printNeighbors();
+		
 
 		return true;
 	}
@@ -172,6 +174,7 @@ public class Main {
 			line = reader.readLine();
 			parts = line.split("\t");			
 			nodes.put(Main.ID, new Node(Main.ID, Main.getAddress(parts[1])));
+			shadowQueues.put(Main.ID, new ShadowQueue(Main.ID, 0));
 			
 			line = reader.readLine();
 			parts = line.split("\t");			
@@ -187,8 +190,10 @@ public class Main {
 			int nNodes = Integer.parseInt(parts[1]);			
 			for(int i=0; i<nNodes; i++){
 				line = reader.readLine();
-				parts = line.split("\t");				
-				nodes.put(Integer.parseInt(parts[0]), new Node(Integer.parseInt(parts[0]), Main.getAddress(parts[1]), Integer.parseInt(parts[2])));
+				parts = line.split("\t");			
+				int nodeId = Integer.parseInt(parts[0]);
+				nodes.put(nodeId, new Node(Integer.parseInt(parts[0]), Main.getAddress(parts[1]), Integer.parseInt(parts[2])));
+				shadowQueues.put(nodeId, new ShadowQueue(nodeId, 0));
 			}
 			
 			line = reader.readLine();
@@ -253,9 +258,9 @@ public class Main {
 	
 	
 	public static void notifyShadowQueueArrival(){
-		//TODO: lock here
 		synchronized(syncLock){
 			nShadowQueueReceived++;
+			System.out.println("CONTROL: Received " + nShadowQueueReceived + " packets");
 			syncLock.notify();
 		}
 		
@@ -313,7 +318,7 @@ public class Main {
 				int destination = iterator.next();
 				int nPackets = packet.shadowPackets.get(destination);
 				Main.shadowPacketsReceived += nPackets;
-				System.out.println("DEBUG: " + Main.shadowPacketsReceived);
+				//System.out.println("DEBUG: " + Main.nShadowQueueReceived);
 				if(destination==Main.ID){
 					continue;
 				}
@@ -350,10 +355,19 @@ public class Main {
 		while(neighborIterator.hasNext()){
 			int neighborId = neighborIterator.next();
 			Neighbor neighbor = neighbors.get(neighborId);
-			neighbor.node = nodes.get(neighborId);
 
-			//TODO: start the thread
+			
 			neighbor.start();
+		}
+	}
+	
+	public static void initNeighbors(){
+		Iterator<Integer> neighborIterator = neighbors.keySet().iterator();
+		while(neighborIterator.hasNext()){
+			int neighborId = neighborIterator.next();
+			Neighbor neighbor = neighbors.get(neighborId);
+			neighbor.node = nodes.get(neighborId);
+			
 		}
 	}
 
@@ -372,12 +386,7 @@ public class Main {
 
 
 
-	public static int getNextFlowID(){
-		int newFlowId=0;		
-		newFlowId = Main.nextFlowID;
-		Main.nextFlowID++;		
-		return newFlowId;
-	}
+
 
 	public static int sizeof(Object obj) throws IOException {
 
