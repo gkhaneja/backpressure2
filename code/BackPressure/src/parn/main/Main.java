@@ -94,9 +94,9 @@ public class Main {
 	public static int controlBytesSent=0;
 	public static int controlBytesReceived=0;
 
-	public static boolean init(int id, String confFile){
+	public static boolean init(String confFile){
 		//TODO: change static id assignment: Done
-		ID=id;
+		//ID=id;
 		nodes = new HashMap<Integer, Node>();
 		neighbors = new HashMap<Integer, Neighbor>();
 		inputBuffer = new LinkedBlockingQueue<DataPacket>();
@@ -398,8 +398,9 @@ public class Main {
 
 	public static void main(String[] args) {
 		//Main.init(1,"bp.conf");
-		System.out.println("Given id: " + args[0]);
-		Main.init(Integer.parseInt(args[0]),"bp.conf");
+		System.out.println("Given file: " + args[0]);
+		//System.out.println()
+		Main.init(args[0]);
 	}
 
 }
