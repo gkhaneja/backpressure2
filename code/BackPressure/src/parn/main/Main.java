@@ -116,7 +116,7 @@ public class Main {
 		syncLock = new Object();
 		shadowQueueSendingNotification = new Object();
 		
-		if(!parseConfFile(confFile)) return false;
+		if(!parseConfFile2(confFile)) return false;
 		
 		
 		Iterator<Integer> iterator = nodes.keySet().iterator();
@@ -134,8 +134,8 @@ public class Main {
 		router.start();
 		commandPromt.start();
 
-		//printNodes();
-		//printNeighbors();
+		printNodes();
+		printNeighbors();
 
 		return true;
 	}
@@ -178,7 +178,28 @@ public class Main {
 			int nNeighbors = Integer.parseInt(parts[1]);			
 			for(int i=0; i<nNeighbors; i++){
 				line = reader.readLine();
+				parts = line.split("\t");
+				neighbors.put(Integer.parseInt(parts[0]), new Neighbor(Integer.parseInt(parts[2])));
 			}
+			
+			line = reader.readLine();
+			parts = line.split("\t");			
+			int nNodes = Integer.parseInt(parts[1]);			
+			for(int i=0; i<nNodes; i++){
+				line = reader.readLine();
+				parts = line.split("\t");				
+				nodes.put(Integer.parseInt(parts[0]), new Node(Integer.parseInt(parts[0]), Main.getAddress(parts[1]), Integer.parseInt(parts[2])));
+			}
+			
+			line = reader.readLine();
+			parts = line.split("\t");			
+			int nFlows = Integer.parseInt(parts[1]);			
+			for(int i=0; i<nFlows; i++){
+				line = reader.readLine();
+				parts = line.split("\t");				
+				flows.put(Integer.parseInt(parts[0]), new Flow(Integer.parseInt(parts[0]), Main.ID, Integer.parseInt(parts[1]), Double.parseDouble(parts[2])));
+			}
+			
 			
 			reader.close();
 		}catch(FileNotFoundException e){
@@ -341,15 +362,10 @@ public class Main {
 			return;
 		}
 		Random rand = new Random();
-		Iterator<Integer> nodeIterator = nodes.keySet().iterator();
-		while(nodeIterator.hasNext()){
-			int nodeId = nodeIterator.next();
-			if(Main.ID!=nodeId){
-				int flowId = Main.getNextFlowID();
-				Flow flow = new Flow(flowId, Main.ID, nodeId, 0.1);
-				flows.put(flowId, flow);
-				flow.start();
-			}
+		Iterator<Integer> iterator = flows.keySet().iterator();
+		while(iterator.hasNext()){
+			int flowId = iterator.next();
+			Main.flows.get(flowId).start();			
 		}
 	}
 

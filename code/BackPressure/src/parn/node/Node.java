@@ -11,6 +11,7 @@ import parn.main.Main;
 public class Node {
 	public int id;
 	public InetAddress address;
+	public int pathLength;
 	
 	//Note: not being used as of now. The Main explicitly maintains a HashMap<Integer, ShadowQueue>. Reason - fast creation of control packets.
 	public int shadowQueue;
@@ -31,6 +32,19 @@ public class Node {
 		super();
 		this.id = id;
 		this.address = address;
+		shadowQueue=0;
+		tokenBuckets = new HashMap<Integer, Integer>();
+		packetsTotal = 0;
+		packetsPerLink = new HashMap<Integer, Integer>();
+		probs = new HashMap<Integer, Double>();
+		prevProbs = new HashMap<Integer, Double>();
+	}
+	
+	public Node(int id, InetAddress address, int pathLength) {
+		super();
+		this.id = id;
+		this.address = address;
+		this.pathLength = pathLength;
 		shadowQueue=0;
 		tokenBuckets = new HashMap<Integer, Integer>();
 		packetsTotal = 0;
