@@ -25,7 +25,14 @@ public class ShadowPacketGenerator extends Thread {
 		while(!Configurations.SYSTEM_HALT){
             
 			
-			synchronized(Main.syncLock){
+			synchronized(Main.receivedShadowQueueLock){
+				
+				try {
+					Main.receivedShadowQueueLock.wait();
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 				
 				if(Main.nShadowQueueReceived == Main.neighbors.size()){
 					iteration++;
@@ -46,9 +53,10 @@ public class ShadowPacketGenerator extends Thread {
 								maxWeight  = weight;
 							}
 						}
+						
+						HashMap<Integer, Integer> shadowPackets = new HashMap<Integer, Integer>();
 						if(maxWeight>0){
-							//TODO: how many shadow packets are to be transfered over link: Capacity ?
-							
+							//TODO: how many shadow packets are to be transfered over link: Capacity ?							
 							int nShadowPackets = Main.Capacity;
 							if(Configurations.DEBUG_ON){
 								nShadowPackets = (int) ((System.currentTimeMillis() - time) / Configurations.SLOW_DOWN_FACTOR);
@@ -57,21 +65,24 @@ public class ShadowPacketGenerator extends Thread {
 								nShadowPackets = (int) ((System.currentTimeMillis() - time)* Main.bandwidth / (2*Main.neighbors.size() * Main.dataPacketSize));
 								System.out.print("\tCONTROL: " + this + " REAL MODE: "  + nShadowPackets + " generated for  " + winnerDest);
 							}
-							
 							//TODO: lock for shadow queue
 							nShadowPackets = Main.shadowQueues.get(winnerDest).update(-1*nShadowPackets);
 							System.out.print(". Actual Shadow Packets sent: " + nShadowPackets);
 							Main.shadowPacketsSent += nShadowPackets;
-							HashMap<Integer, Integer> shadowPackets = new HashMap<Integer, Integer>();
+							
 							Node winnerNode = Main.nodes.get(winnerDest);
 							winnerNode.updateTokenBucket(neighbor.node.id, -1*nShadowPackets);
 							shadowPackets.put(winnerDest, nShadowPackets);
 							System.out.println(". Sending " + nShadowPackets + " ShadowPackets to " + neighbor);
-							neighbor.sendShadowPackets(shadowPackets);
-							
 						}else{
+							
 							System.out.print("CONTROL: " + this + " No shadow packets for " + neighbor);
 						}
+							
+							
+						neighbor.sendShadowPackets(shadowPackets, iteration);
+							
+						
 						
 					}
 					time = System.currentTimeMillis();
@@ -86,38 +97,33 @@ public class ShadowPacketGenerator extends Thread {
 					System.out.println("CONTROL: " + this + " iteration ended");
 					
 					
-					synchronized(Main.shadowQueueSendingNotification){
-						Main.shadowQueueSendingNotification.notifyAll();
-					}
+					/*synchronized(Main.receivedShadowPacketLock){
+						Main.receivedShadowPacketLock.notifyAll();
+					}*/
 					
 					
 					//TODO: check if probabilities are stabilized ?
 					if(checkStability()){
 						if(!Configurations.isStable){
-							System.out.println("\tCONTROL: " + this + " System is stable");
+							System.out.println("CONTROL: System is stable");
 							Configurations.isStable = true;
 							Configurations.stableIterations = iteration;
 							Configurations.stableTime = System.currentTimeMillis() - Configurations.startTime;
 						}else{
-							System.out.println("\tCONTROL: " + this + " System remains stable");
+							System.out.println("System remains stable");
 						}
 						
 					}else{
 						if(!Configurations.isStable){
-							System.out.println("\tCONTROL: " + this + " System is NOT stable yet");
+							System.out.println("System is NOT stable yet");
 						}else{
-							System.out.println("\tCONTROL: " + this + " ERROR: System went from stable to unstable");
+							System.out.println("ERROR: System went from stable to unstable");
 							Main.error = true;
 						}
 					}
 					
 				}
-				try {
-					Main.syncLock.wait();
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
+				
 			}
 			
 		}

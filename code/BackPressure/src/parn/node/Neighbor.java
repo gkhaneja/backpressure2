@@ -86,20 +86,19 @@ public class Neighbor extends Thread {
 	//Algo: 
 	
 	public void updateShadowQueue(ControlPacket packet){
-		Object lock = new Object();
-		//TODO: Lock not required because there's only one thread updating this neighbors shadow queues.
-		synchronized(lock){
-			//TODO: Should we send updates or all Shadow queue (tradeoff - packet size vs number of control packets) ? Perhaps, batch updates ?
+		
+			//TODO: Should we send updates or all Shadow queue (tradeoff - packet size vs number of control packets) ? Perhaps, batch updates ? Right now, sending all.
 			shadowQueues = packet.shadowQueues;
-		}
+		
 		Main.notifyShadowQueueArrival();
 	}
 	
-	public void sendShadowPackets(HashMap<Integer, Integer> shadowPackets){
+	public void sendShadowPackets(HashMap<Integer, Integer> shadowPackets, int iteration){
 		
-		ControlPacket packet = new ControlPacket(Main.ID, node.id, Configurations.SHADOW_PACKET_TYPE );
+		ControlPacket packet = new ControlPacket(Main.ID, node.id, Configurations.SHADOW_PACKET_TYPE, iteration );
 		packet.shadowPackets = shadowPackets;
 		try {
+			System.out.println("CONTROL: sending " + packet);
 			control.out.writeObject(packet);
 		} catch (IOException e) {
 			System.out.println(this + ": Error sending " + packet);

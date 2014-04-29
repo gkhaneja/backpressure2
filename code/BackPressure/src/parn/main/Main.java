@@ -47,6 +47,9 @@ public class Main {
 	public static long stopTime = 0;
 	public static long startTime = System.currentTimeMillis();
 	public static boolean error = false;
+	public static int iteration=0;
+	//phase: 0-sending/receiving to shadow packets (shadowPacketGenerator is active) , 1-sending/receiving to shadow queues (controlPacketSenders are active)
+	public static int iterationPhase=1;
 
 	
 	
@@ -59,13 +62,15 @@ public class Main {
 
 	//Locks and Notifiers
 	private static Object shadowQueueLock;
-	public static Object syncLock;
-	public static Object shadowQueueSendingNotification;
+	public static Object receivedShadowQueueLock = new Object();
+	public static Object receivedShadowPacketLock = new Object();
+	public static Object iterationPhaseLock = new Object();
 	private static Object controlReceiverStatsLock = new Object();
 	private static Object controlSenderStatsLock = new Object();
 	
 	//Shared and synchronized (lock protected) fields:
 	public static int nShadowQueueReceived;
+	public static int nShadowPacketReceived;
 	
 	//Measurements per flow
 	public static HashMap<Integer, FlowStat> flowStatReceived = new HashMap<Integer, FlowStat>();
@@ -113,8 +118,8 @@ public class Main {
 		//TODO: change this. For testing.
 		Capacity = 1;	
 		shadowQueueLock= new Object();
-		syncLock = new Object();
-		shadowQueueSendingNotification = new Object();
+		receivedShadowQueueLock = new Object();
+		receivedShadowPacketLock = new Object();
 		
 		if(!parseConfFile2(confFile)) return false;
 		
@@ -258,12 +263,26 @@ public class Main {
 	
 	
 	public static void notifyShadowQueueArrival(){
-		synchronized(syncLock){
+		synchronized(receivedShadowQueueLock){
 			nShadowQueueReceived++;
-			System.out.println("CONTROL: Received " + nShadowQueueReceived + " packets");
-			syncLock.notify();
+			System.out.println("CONTROL: Received " + nShadowQueueReceived + " shadow-queues for iteration " + Main.iteration);
+			if(nShadowQueueReceived == Main.neighbors.size()){
+				Main.iteration += 0.5;
+				receivedShadowQueueLock.notify();
+			}
 		}
 		
+	}
+	
+	public static void notifyShadowPacketArrival(){
+		synchronized(receivedShadowPacketLock){
+			nShadowPacketReceived++;
+			System.out.println("CONTROL: Received " + nShadowPacketReceived + " shadow-packets for iteration " + Main.iteration);
+			if(nShadowPacketReceived == Main.neighbors.size()){
+				Main.iteration += 0.5;
+				receivedShadowPacketLock.notifyAll();
+			}
+		}
 	}
 	
 	public static void updateControlReceiverStats(ControlPacket packet){
@@ -288,13 +307,7 @@ public class Main {
 		}
 	}
 	
-	public static void reset(){
-		nShadowQueueReceived=0;
-		Iterator<Neighbor> iterator = neighbors.values().iterator();
-		while(iterator.hasNext()){
-			iterator.next().reset();
-		}
-	}
+	
 	
 	public static HashMap<Integer, ShadowQueue> getShadowQueues(){
 		//TODO: Do we need locking here - synchronized with Main.updateShadowQueue(dest, change) ?
@@ -309,7 +322,7 @@ public class Main {
 		}
 		
 		if(packet.shadowPackets.size() > 1){
-			System.out.println("INFO: Proportional splitting is ON");
+			System.out.println("CONTROL: INFO: Proportional splitting is ON");
 		}
 		
 		synchronized(shadowQueueLock){
@@ -326,7 +339,7 @@ public class Main {
 					shadowQueues.get(destination).update(nPackets);
 				}	
 			}
-			
+			Main.notifyShadowPacketArrival();
 		}
 	}
 	

@@ -44,10 +44,11 @@ public class ControlPacketSender extends Thread{
 				break;
 			}
 			
+			//TODO: Resetting
 	
 			try {
-				synchronized(Main.shadowQueueSendingNotification){
-					Main.shadowQueueSendingNotification.wait();
+				synchronized(Main.receivedShadowPacketLock){
+					Main.receivedShadowPacketLock.wait();
 				}
 			} catch (InterruptedException e1) {
 				e1.printStackTrace();
