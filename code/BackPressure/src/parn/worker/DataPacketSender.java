@@ -32,7 +32,7 @@ public class DataPacketSender extends Thread {
 			DataPacket packet = neighbor.realQueue.poll();
 			if(packet==null) continue;
 			try {
-				System.out.println("DATA: " + this + " sending " + packet);
+				//System.out.println("DATA: " + this + " sending " + packet);
 				connection.writeObject(packet);
 			} catch (IOException e) {
 				System.out.println("DATA: " + this + ": Error sending " + packet);

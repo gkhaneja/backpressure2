@@ -28,7 +28,7 @@ public class CommandPromt extends Thread {
 	public  static void printStats(){
 		System.out.println("STAT: time: " + (System.currentTimeMillis() - Main.startTime));
 		System.out.println("STAT: The system encountered an error. " + Main.error);
-		System.out.println("STAT: No. of iterations: " + Main.shadowPacketGenerator.iteration );
+		System.out.println("STAT: No. of iterations: " + Main.iteration );
 		System.out.println("STAT: Stable iteration: " + Configurations.stableIterations);
 		System.out.println("STAT: Stable time: " + Configurations.stableTime);
 		System.out.println();
@@ -42,7 +42,7 @@ public class CommandPromt extends Thread {
 		System.out.println("STAT: Control Bytes sent: " + Main.controlBytesSent);
 		System.out.println("STAT: Control Packets sent : " + Main.controlPacketsSent);
 		System.out.println("STAT: Control bytes received: " + Main.controlBytesReceived);
-		System.out.println("STAT: Control packets sent: " + Main.controlPacketsSent);
+		System.out.println("STAT: Control packets received: " + Main.controlPacketsReceived);
 		System.out.println();
 		
 		System.out.println("STAT: data packets generated: " + Main.dataPacketsGenerated);

@@ -1,5 +1,7 @@
 package parn.worker;
 
+import java.util.Iterator;
+
 import parn.main.Configurations;
 import parn.main.FlowStat;
 import parn.main.Main;
@@ -9,12 +11,25 @@ import parn.packet.DataPacket;
 
 public class Router extends Thread {
 	
+	long lastTime=0;
+	
+	public String getAllTokenBucketsString(){
+		String str = "";
+		Iterator<Integer> iterator = Main.nodes.keySet().iterator();
+		while(iterator.hasNext()){
+			str += Main.nodes.get(iterator.next()).tokenBucketString() + "\t";
+		}
+		return str;
+	}
+	
 	public void run(){
 		while(!Configurations.SYSTEM_HALT){
 			  	
 			  long time = System.currentTimeMillis() - Main.startTime;
-			  if(time%1000 == 0){
+			  if(time%1000 == 0 && time!=lastTime){
 				  System.out.println("INFO: " + time + " / " + Main.duration);
+				  System.out.println("TokenBuckets: \t" + getAllTokenBucketsString());
+				  lastTime = time;
 			  }
 			  if (System.currentTimeMillis() - Main.startTime > Main.duration){
 	                Configurations.SYSTEM_HALT = true;
@@ -49,7 +64,7 @@ public class Router extends Thread {
 				try {
 					Main.dataPacketsSent++;
 					neighbor.realQueue.put(packet);
-					System.out.println("DATA: Router: routing " + packet + " to " + neighbor);
+					//System.out.println("DATA: Router: routing " + packet + " to " + neighbor);
 				} catch (InterruptedException e) {
 					System.out.println("DATA: Router: Error transferring " + packet);
 					e.printStackTrace();
@@ -66,7 +81,7 @@ public class Router extends Thread {
 	
 	public void consumePacket(DataPacket packet){
 		//TODO: Assuming at most one flow source
-		System.out.println("DATA: Consuming " + packet);
+		//System.out.println("DATA: Consuming " + packet);
 		if(Main.flowStatReceived.containsKey(packet.source)){
 			Main.flowStatReceived.get(packet.source).addPacket(packet);
 		}else{

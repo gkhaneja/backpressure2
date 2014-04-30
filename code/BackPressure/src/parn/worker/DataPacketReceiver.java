@@ -2,10 +2,12 @@ package parn.worker;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.util.HashMap;
 
 import parn.main.Configurations;
 import parn.main.Main;
 import parn.node.Neighbor;
+import parn.packet.ControlPacket;
 import parn.packet.DataPacket;
 
 public class DataPacketReceiver extends Thread {
@@ -24,8 +26,12 @@ public class DataPacketReceiver extends Thread {
 			try {
 				DataPacket packet = (DataPacket) connection.readObject();
 				//CheckValidity: Check and decrement TTL before putting packet in input buffer 
-				if(packet.checkValidity()) Main.inputBuffer.put(packet);
-				System.out.println("DATA: " + this + ": received " + packet);
+				if(packet.checkValidity()){
+					Main.inputBuffer.put(packet);
+				}else{					
+					Main.updateShadowQueueDropped(packet.destination);
+				}
+				//System.out.println("DATA: " + this + ": received " + packet);
 
 			} catch (IOException e) {
 				System.out.println("DATA: " + this + " Error receving data packets");

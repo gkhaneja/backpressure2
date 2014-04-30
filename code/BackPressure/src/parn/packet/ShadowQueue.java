@@ -22,7 +22,7 @@ public class ShadowQueue implements Serializable {
 		//TODO: Not sure about this check
 		if(change < 0){
 			if(change + length < 0){
-				System.out.println("ERROR: " + this);
+				//System.out.println("ERROR: " + toString2());
 				int temp = length;
 				length=0;
 				return temp;
@@ -39,5 +39,9 @@ public class ShadowQueue implements Serializable {
 	
 	public String toString(){
 		return destination + "->" + length;
+	}
+	
+	public String toString2(){
+		return "ShadowQueue[" + destination + "->" + length + "]";
 	}
 }

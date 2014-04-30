@@ -95,7 +95,7 @@ public class Neighbor extends Thread {
 	
 	public void sendShadowPackets(HashMap<Integer, Integer> shadowPackets, int iteration){
 		
-		ControlPacket packet = new ControlPacket(Main.ID, node.id, Configurations.SHADOW_PACKET_TYPE, iteration );
+		ControlPacket packet = new ControlPacket(Main.ID, node.id, Configurations.SHADOW_PACKET_TYPE);
 		packet.shadowPackets = shadowPackets;
 		try {
 			System.out.println("CONTROL: sending " + packet);

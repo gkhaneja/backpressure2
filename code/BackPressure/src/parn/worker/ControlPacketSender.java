@@ -48,7 +48,7 @@ public class ControlPacketSender extends Thread{
 			System.out.println("CONTROL: " + this + " Starting " + Main.iteration + ", " + Main.iterationPhase);
 
 			
-			ControlPacket packet = new ControlPacket(Main.ID, neighbor.node.id, Configurations.SHADOW_QUEUE_TYPE);
+			ControlPacket packet = new ControlPacket(Main.ID, neighbor.node.id, Configurations.SHADOW_QUEUE_TYPE, Main.iteration, Main.iterationPhase);
 			try {
 				System.out.println("CONTROL: " + this + " sending " + packet);
 				connection.writeObject(packet);
@@ -62,6 +62,7 @@ public class ControlPacketSender extends Thread{
 			
 			synchronized(Main.sentShadowQueueLock){
 				Main.nShadowQueuesSent++;
+				System.out.println("CONTROL: " + this + " nShadowQueuesSent: " + Main.nShadowQueuesSent + ", NeighborSize: " + Main.neighbors.size());
 				if(Main.nShadowQueuesSent == Main.neighbors.size()){
 					System.out.println("CONTROL: " + this + " The Last ControlPacketSender");
 					Main.nShadowQueuesSent=0;
@@ -85,9 +86,18 @@ public class ControlPacketSender extends Thread{
 				}
 				
 				
+				
 			}
 			
-			
+			synchronized(Main.iterationPhaseLock){
+				while(Main.iterationPhase==1){
+					try {
+						Main.iterationPhaseLock.wait();
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+				}						
+			}
 			
 			
 	

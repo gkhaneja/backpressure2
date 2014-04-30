@@ -44,6 +44,11 @@ public class ShadowPacketGenerator extends Thread {
 				System.out.println("CONTROL: ERROR: " + this + " proper number of shadow queues were not received.");
 			}
 			
+			try{
+				sleep(Configurations.CONTROL_INTERVAL);
+			}catch(Exception e){
+				e.printStackTrace();
+			}
 			
 			iteration++;
 			Main.iteration++;

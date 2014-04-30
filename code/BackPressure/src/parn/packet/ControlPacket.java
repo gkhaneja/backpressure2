@@ -17,6 +17,7 @@ public class ControlPacket implements Serializable{
 	public int destination;
 	public int type;
 	public int iteration;
+	public int iterationPhase;
 	public HashMap<Integer, ShadowQueue> shadowQueues;
 	public HashMap<Integer, Integer> shadowPackets;
 	
@@ -27,6 +28,7 @@ public class ControlPacket implements Serializable{
 		this.destination=destination;
 		this.type = type;
 		this.iteration = -1;
+		this.iterationPhase=-1;
 		if(this.type==Configurations.SHADOW_QUEUE_TYPE){ 
 			shadowQueues = Main.getShadowQueues();
 			shadowPackets = null;
@@ -37,11 +39,12 @@ public class ControlPacket implements Serializable{
 		
 	}
 	
-	public ControlPacket(int source, int destination, int type, int iteration){
+	public ControlPacket(int source, int destination, int type, int iteration, int phase){
 		this.source=source;
 		this.destination=destination;
 		this.type = type;
 		this.iteration = iteration;
+		this.iterationPhase = phase;
 		if(this.type==Configurations.SHADOW_QUEUE_TYPE){ 
 			shadowQueues = Main.getShadowQueues();
 			shadowPackets = null;
@@ -63,7 +66,7 @@ public class ControlPacket implements Serializable{
 	public String toString(){
 		String ret="ControlPacket[";
 		if(type==Configurations.SHADOW_QUEUE_TYPE){
-			ret += "ShadowQueues][" + iteration +  "][";
+			ret += "ShadowQueues][" + iteration + "," + iterationPhase +  "][";
 			Iterator<Integer> shadowQueueIterator = shadowQueues.keySet().iterator();
 			while(shadowQueueIterator.hasNext()){
 				ret += shadowQueues.get(shadowQueueIterator.next()) + ", ";

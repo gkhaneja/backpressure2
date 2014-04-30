@@ -71,9 +71,9 @@ public class Main {
 	
 	
 	//Shared and synchronized (lock protected) fields:
-	public static int nShadowQueueReceived;
+	public static int nShadowQueueReceived = 0;
 	public static int nShadowQueuesSent=0;
-	public static int nShadowPacketReceived;
+	public static int nShadowPacketReceived = 0;
 	
 	//Measurements per flow
 	public static HashMap<Integer, FlowStat> flowStatReceived = new HashMap<Integer, FlowStat>();
@@ -332,8 +332,8 @@ public class Main {
 			Iterator<Integer> iterator = packet.shadowPackets.keySet().iterator();			
 			while(iterator.hasNext()){
 				int destination = iterator.next();
-				int nPackets = packet.shadowPackets.get(destination);
-				Main.shadowPacketsReceived += nPackets;
+				int nPackets = packet.shadowPackets.get(destination);				
+				Main.shadowPacketsReceived += nPackets;				
 				//System.out.println("DEBUG: " + Main.nShadowQueueReceived);
 				if(destination==Main.ID){
 					continue;
@@ -343,6 +343,17 @@ public class Main {
 				}	
 			}
 			Main.notifyShadowPacketArrival();
+		}
+	}
+	
+	public static void updateShadowQueueDropped(int destination){
+		if(destination==Main.ID){
+			return;
+		}
+		synchronized(shadowQueueLock){
+			if(shadowQueues.containsKey(destination)){
+				shadowQueues.get(destination).update(-1);
+			}	
 		}
 	}
 	

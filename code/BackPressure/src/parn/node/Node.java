@@ -4,6 +4,7 @@ import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Random;
 
 import parn.main.Configurations;
 import parn.main.Main;
@@ -103,24 +104,30 @@ public class Node {
 	}
 	
 	public int getTokenBucket(){
+		Random rand = new Random();
 		int smallestTokenBucket=-1;
 		int smallestTokenBucketValue=0;
+		int first=1;
 		Iterator<Integer> iterator = tokenBuckets.keySet().iterator();
 		while(iterator.hasNext()){
 			int tokenBucket = iterator.next();
 			int tokenBucketValue = tokenBuckets.get(tokenBucket);
-			if(tokenBucketValue <= smallestTokenBucketValue){
+			if((tokenBucketValue < smallestTokenBucketValue) || (tokenBucketValue == smallestTokenBucketValue && rand.nextBoolean()) || first==1){
 				smallestTokenBucket = tokenBucket;
 				smallestTokenBucketValue = tokenBucketValue;
+				first=0;
 			}
 		}
 		packetsPerLink.put(smallestTokenBucket, packetsPerLink.get(smallestTokenBucket) + 1);
 		packetsTotal++;
+		
+		tokenBuckets.put(smallestTokenBucket, smallestTokenBucketValue + 1);
+		
 		return smallestTokenBucket;
 	}
 	
 	public void updateTokenBucket(int link, int change){
-		//TODO: lock ?
+		
 		if(!tokenBuckets.containsKey(link)){
 			tokenBuckets.put(link, 0);
 			System.out.println("WARN: Missing token bucket " +  link + " from " + this);
@@ -154,5 +161,14 @@ public class Node {
 		this.port = port;
 	}*/
 	
+	public String tokenBucketString(){
+		String str = toString() + "[";
+		Iterator<Integer> iterator = tokenBuckets.keySet().iterator();
+		while(iterator.hasNext()){
+			int neighbor = iterator.next();
+			str += neighbor + ":" + tokenBuckets.get(neighbor)  + ", ";
+		}
+		return str + "]";
+	}
 	
 }
