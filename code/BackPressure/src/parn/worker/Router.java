@@ -28,7 +28,7 @@ public class Router extends Thread {
 			  long time = System.currentTimeMillis() - Main.startTime;
 			  if(time%1000 == 0 && time!=lastTime){
 				  System.out.println("INFO: " + time + " / " + Main.duration);
-				  System.out.println("TokenBuckets: \t" + getAllTokenBucketsString());
+				  System.out.println("DATA: TokenBuckets: \t" + getAllTokenBucketsString());
 				  lastTime = time;
 			  }
 			  if (System.currentTimeMillis() - Main.startTime > Main.duration){
@@ -48,6 +48,8 @@ public class Router extends Thread {
 			}*/
 			
 			DataPacket packet = Main.inputBuffer.poll();
+			
+			
 			
 			if(packet==null) continue;
 			//TokenBucket algorithm

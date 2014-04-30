@@ -20,6 +20,9 @@ public class FlowStat {
 	public int pathLength;
 	public long travelTime;
 	
+	public int maxPathLength;
+	public long maxTravelTime;
+	
 	public FlowStat(DataPacket packet){
 		this.flowId = packet.flowID;
 		this.source = packet.source;
@@ -29,7 +32,9 @@ public class FlowStat {
 			this.nBytes = Main.sizeof(packet);
 			this.nPayloadBytes = packet.payload.length;
 			this.pathLength = packet.path.size();
+			this.maxPathLength = packet.path.size();
 			this.travelTime = System.currentTimeMillis() - packet.time;
+			this.maxTravelTime = this.travelTime;
 			this.nPackets = 1;
 		} catch (IOException e) {
 			System.out.println("ERROR: couldn't coount " + packet);
@@ -53,9 +58,16 @@ public class FlowStat {
 			this.nBytes += Main.sizeof(packet);
 			this.nPayloadBytes += packet.payload.length;
 			this.pathLength = (this.nPackets*this.pathLength + packet.path.size()) / (this.nPackets+1);
-			this.travelTime = (this.nPackets*this.travelTime + (System.currentTimeMillis() - packet.time))/(this.nPackets + 1);
+			if(packet.path.size() > this.maxPathLength){
+				maxPathLength = packet.path.size();
+			}
+			long currTravelTime = (System.currentTimeMillis() - packet.time);
+			this.travelTime = (this.nPackets*this.travelTime + (currTravelTime))/(this.nPackets + 1);
+			if(currTravelTime > this.maxTravelTime){
+				this.maxTravelTime = currTravelTime;
+			}
 			this.nPackets++;
-			System.out.println("Data packet sizes: " + Main.sizeof(packet) + ", " + packet.payload.length);
+			//System.out.println("Data packet sizes: " + Main.sizeof(packet) + ", " + packet.payload.length);
 		} catch (IOException e) {
 			System.out.println("ERROR: couldn't coount " + packet);
 		}
@@ -70,8 +82,10 @@ public class FlowStat {
 		ret += "nPackets:" + nPackets + ", ";
 		ret += "nBytes:" + nBytes + ", ";
 		ret += "nPayLoadBytes:" + nPayloadBytes + ", ";
-		ret += "pathLength:" + pathLength + ", ";
-		ret += "travelTime:" + travelTime + "]";
+		ret += "avgPathLength:" + pathLength + ", ";
+		ret += "maxPathLength:" + maxPathLength + ", ";
+		ret += "avgTravelTime:" + travelTime + ", ";
+		ret += "maxTravelTime:" + maxTravelTime + "]";
 		return ret;
 	}
 	

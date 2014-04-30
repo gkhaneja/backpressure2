@@ -175,6 +175,7 @@ public class Main {
 			Main.usePropSplitting = Integer.parseInt(parts[2]);
 			Main.initializeShadowQueues = Integer.parseInt(parts[3]);
 			Main.duration = Long.parseLong(parts[4]);
+			Configurations.CONTROL_INTERVAL = Long.parseLong(parts[5]);
 			
 			line = reader.readLine();
 			parts = line.split("\t");
