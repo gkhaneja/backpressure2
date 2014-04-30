@@ -52,7 +52,9 @@ public class CommandPromt extends Thread {
 		
 		Iterator<Integer> iterator = Main.flowStatReceived.keySet().iterator();
 		while(iterator.hasNext()){
+			System.out.println("flow stats");
 			System.out.println(Main.flowStatReceived.get(iterator.next()));
+			
 		}
 	}
 }

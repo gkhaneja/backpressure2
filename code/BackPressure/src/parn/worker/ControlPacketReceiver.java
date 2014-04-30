@@ -26,11 +26,36 @@ public class ControlPacketReceiver extends Thread {
 				
 				
 				Main.updateControlReceiverStats(packet);
-				System.out.println("CONTROL: " + this + " received " + packet);
+				
+				
 				if(packet.type == Configurations.SHADOW_QUEUE_TYPE){
+					
+					synchronized (Main.iterationPhaseLock) {
+						while(Main.iterationPhase == 0){
+							try{
+								Main.iterationPhaseLock.wait();
+							}catch(Exception e){
+								e.printStackTrace();
+							}
+						}
+					}
+					System.out.println("CONTROL: " + this + " received " + packet);
 					neighbor.updateShadowQueue(packet);
+					
 				}else { 
+					
+					synchronized (Main.iterationPhaseLock) {
+						while(Main.iterationPhase == 1){
+							try{
+								Main.iterationPhaseLock.wait();
+							}catch(Exception e){
+								e.printStackTrace();
+							}
+						}
+					}
+					System.out.println("CONTROL: " + this + " received " + packet);
 					Main.updateShadowQueue(packet);
+					
 				}
 			} catch (Exception e) {
 				System.out.println("CONTROL: " + this + " Error receving data packets");

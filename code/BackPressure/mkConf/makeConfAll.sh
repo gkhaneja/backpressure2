@@ -31,5 +31,5 @@ fi
 # input - nodeNumber randomStr IPFile flowRate payload
 for (( i=0; i<$nodes; i++))
 do
-	bash makeConfPerNode.sh $i $2 IPs.txt 1 100 
+	bash makeConfPerNode.sh $i $2 $3 1 100 
 done

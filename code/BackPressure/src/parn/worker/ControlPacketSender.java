@@ -25,13 +25,27 @@ public class ControlPacketSender extends Thread{
 		//System.out.println(this + " is starting.");
 		while(!Configurations.SYSTEM_HALT){
 			//System.out.println(this + " is running");
-			try{
-				sleep(Configurations.CONTROL_PACKET_INTERVAL);
-			}catch(InterruptedException e){
-				System.out.println("CONTROL: " + this + " got interrupted");
+			
+			synchronized(Main.iterationPhaseLock){
+				while(Main.iterationPhase==0){
+					try {
+						Main.iterationPhaseLock.wait();
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+				}						
 			}
 			
-			
+			if(Configurations.DEBUG_ON){
+				try{
+					sleep(Configurations.SLOW_DOWN_FACTOR);
+				}catch(InterruptedException e){
+					System.out.println("CONTROL: " + this + " got interrupted");
+				}
+			}
+
+			System.out.println("CONTROL: " + this + " Starting " + Main.iteration + ", " + Main.iterationPhase);
+
 			
 			ControlPacket packet = new ControlPacket(Main.ID, neighbor.node.id, Configurations.SHADOW_QUEUE_TYPE);
 			try {
@@ -44,16 +58,45 @@ public class ControlPacketSender extends Thread{
 				break;
 			}
 			
-			//TODO: Resetting
-	
-			try {
-				synchronized(Main.receivedShadowPacketLock){
-					Main.receivedShadowPacketLock.wait();
+			
+			synchronized(Main.sentShadowQueueLock){
+				Main.nShadowQueuesSent++;
+				if(Main.nShadowQueuesSent == Main.neighbors.size()){
+					System.out.println("CONTROL: " + this + " The Last ControlPacketSender");
+					Main.nShadowQueuesSent=0;
+					
+					synchronized(Main.receivedShadowQueueLock){
+						while(Main.nShadowQueueReceived != Main.neighbors.size()){
+							try{
+								Main.receivedShadowQueueLock.wait();
+							}catch(Exception e){
+								e.printStackTrace();
+							}
+						}
+						Main.nShadowQueueReceived=0;
+					}
+					
+					synchronized(Main.iterationPhaseLock){
+						//System.out.println("CONTROL: " + this + " Starting " + Main.iteration + ", " + Main.iterationPhase);
+						Main.iterationPhase=0;
+						Main.iterationPhaseLock.notifyAll();					
+					}
 				}
-			} catch (InterruptedException e1) {
-				e1.printStackTrace();
+				
+				
 			}
+			
+			
+			
+			
+	
+			
+			
+			
+			
+			
 		}
+		
 		try {
 			connection.close();
 		} catch (IOException e) {

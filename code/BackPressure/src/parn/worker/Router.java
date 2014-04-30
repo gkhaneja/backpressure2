@@ -21,13 +21,13 @@ public class Router extends Thread {
 	                continue;
 	            }
 			
-			if(Configurations.DEBUG_ON){
+			/*if(Configurations.DEBUG_ON){
 				try{
 					sleep(Configurations.SLOW_DOWN_FACTOR);
 				}catch(InterruptedException e){
 					System.out.println("DATA: Router: Got interrupted");
 				}
-			}
+			}*/
 			
 			DataPacket packet = Main.inputBuffer.poll();
 			if(packet==null) continue;

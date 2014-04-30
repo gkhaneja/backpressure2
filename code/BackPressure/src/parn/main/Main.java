@@ -65,11 +65,14 @@ public class Main {
 	public static Object receivedShadowQueueLock = new Object();
 	public static Object receivedShadowPacketLock = new Object();
 	public static Object iterationPhaseLock = new Object();
+	public static Object sentShadowQueueLock = new Object();
 	private static Object controlReceiverStatsLock = new Object();
 	private static Object controlSenderStatsLock = new Object();
 	
+	
 	//Shared and synchronized (lock protected) fields:
 	public static int nShadowQueueReceived;
+	public static int nShadowQueuesSent=0;
 	public static int nShadowPacketReceived;
 	
 	//Measurements per flow
@@ -84,6 +87,7 @@ public class Main {
 	public static int shadowPacketsReceived=0;
 	//No locking required for this one - since a single thread - ShadowQueueGenerator will generate shadow packets 
 	public static int shadowPacketsSent=0;
+	
 	
 	
 	//Measurements for data packets
@@ -267,8 +271,8 @@ public class Main {
 			nShadowQueueReceived++;
 			System.out.println("CONTROL: Received " + nShadowQueueReceived + " shadow-queues for iteration " + Main.iteration);
 			if(nShadowQueueReceived == Main.neighbors.size()){
-				Main.iteration += 0.5;
-				receivedShadowQueueLock.notify();
+				
+				receivedShadowQueueLock.notifyAll();
 			}
 		}
 		
@@ -278,8 +282,7 @@ public class Main {
 		synchronized(receivedShadowPacketLock){
 			nShadowPacketReceived++;
 			System.out.println("CONTROL: Received " + nShadowPacketReceived + " shadow-packets for iteration " + Main.iteration);
-			if(nShadowPacketReceived == Main.neighbors.size()){
-				Main.iteration += 0.5;
+			if(nShadowPacketReceived == Main.neighbors.size()){			
 				receivedShadowPacketLock.notifyAll();
 			}
 		}
