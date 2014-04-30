@@ -38,6 +38,7 @@ public class ControlPacketSender extends Thread{
 			
 			if(Configurations.DEBUG_ON){
 				try{
+					System.out.println("Sleeping");
 					sleep(Configurations.SLOW_DOWN_FACTOR);
 				}catch(InterruptedException e){
 					System.out.println("CONTROL: " + this + " got interrupted");

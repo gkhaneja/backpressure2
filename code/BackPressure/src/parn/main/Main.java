@@ -44,7 +44,7 @@ public class Main {
 	public static long bandwidth = 1000000000 / 8;
 	public static int usePropSplitting = 0;
 	public static int initializeShadowQueues = 0;
-	public static long stopTime = 0;
+	public static long duration = 0;
 	public static long startTime = System.currentTimeMillis();
 	public static boolean error = false;
 	public static int iteration=0;
@@ -174,7 +174,7 @@ public class Main {
 			Main.epsilon = Double.parseDouble(parts[1]);
 			Main.usePropSplitting = Integer.parseInt(parts[2]);
 			Main.initializeShadowQueues = Integer.parseInt(parts[3]);
-			Main.stopTime = Long.parseLong(parts[4]);
+			Main.duration = Long.parseLong(parts[4]);
 			
 			line = reader.readLine();
 			parts = line.split("\t");

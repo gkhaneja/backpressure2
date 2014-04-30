@@ -18,7 +18,7 @@ public class Configurations {
 	//Switches
 	//public static final boolean TURN_OFF_DATA_CHANNELS = true;
 	public static final boolean TURN_OFF_FLOWS = false;
-	public static final boolean DEBUG_ON = true;
+	public static final boolean DEBUG_ON = false;
 	public static final int SLOW_DOWN_FACTOR = 5000;
 	public static boolean SYSTEM_HALT = false;
 	

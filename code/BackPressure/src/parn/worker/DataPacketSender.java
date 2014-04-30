@@ -22,6 +22,7 @@ public class DataPacketSender extends Thread {
 			//System.out.println(this + " is running");
 			if(Configurations.DEBUG_ON){
 				try{
+					System.out.println("DATA: " + this + " Sleeping");
 					sleep(Configurations.SLOW_DOWN_FACTOR);
 				}catch(InterruptedException e){
 					System.out.println("DATA: " + this + " got interrupted");

@@ -11,9 +11,12 @@ public class Router extends Thread {
 	
 	public void run(){
 		while(!Configurations.SYSTEM_HALT){
-			
-			//System.out.println("INFO: " + (System.currentTimeMillis() - Main.startTime) + " " + Main.stopTime );
-			  if (System.currentTimeMillis() - Main.startTime > Main.stopTime){
+			  	
+			  long time = System.currentTimeMillis() - Main.startTime;
+			  if(time%1000 == 0){
+				  System.out.println("INFO: " + time + " / " + Main.duration);
+			  }
+			  if (System.currentTimeMillis() - Main.startTime > Main.duration){
 	                Configurations.SYSTEM_HALT = true;
 	                //System.out.println("INFO: Stopping the system");
 	                CommandPromt.printStats();
@@ -30,6 +33,7 @@ public class Router extends Thread {
 			}*/
 			
 			DataPacket packet = Main.inputBuffer.poll();
+			
 			if(packet==null) continue;
 			//TokenBucket algorithm
 			packet.path.add((char) Main.ID);	
@@ -41,10 +45,11 @@ public class Router extends Thread {
 				int link = destination.getTokenBucket();
 				
 				Neighbor neighbor = Main.neighbors.get(link);
-				System.out.println("DATA: Router: routing " + packet + " to " + neighbor);
+				
 				try {
 					Main.dataPacketsSent++;
 					neighbor.realQueue.put(packet);
+					System.out.println("DATA: Router: routing " + packet + " to " + neighbor);
 				} catch (InterruptedException e) {
 					System.out.println("DATA: Router: Error transferring " + packet);
 					e.printStackTrace();
