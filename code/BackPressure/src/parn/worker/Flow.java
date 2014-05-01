@@ -27,33 +27,41 @@ public class Flow extends Thread {
 	
 	public void run(){
 		Random rand = new Random();
-		int sleepTime =  (int) ((int) 1.0/rate);
+		long startTime = System.currentTimeMillis();
+		double frequency =   1.0/rate;
 		//System.out.println("Sleep time is " + sleepTime);
 		while(!Configurations.SYSTEM_HALT){
-			//TODO: Add randomness according to conf file
-			try{
-				sleep(sleepTime*1000);
+			
+			/*try{
+				sleep((long) sleepTime*1000);
 			}catch(InterruptedException e){
 				System.out.println(this + " got interrupted");
-			}
-			DataPacket packet = new DataPacket(id, source, destination, sequenceNumber++);
-			try {
-				Main.inputBuffer.put(packet);
-				//System.out.println("DATA: Generated " + packet);
-				//TODO: Add Shadow Packets
-				if(rand.nextDouble() < Main.epsilon){
-					Main.addShadowPackets(destination, 2);
-					
-				}else{
-					Main.addShadowPackets(destination, 1);
+			}*/
+			
+			//TODO: Add data and shadow packet in batches
+
+			for(int i=0;i<rate; i++){
+				DataPacket packet = new DataPacket(id, source, destination, sequenceNumber++);
+
+				try {
+					Main.inputBuffer.put(packet);
+					//System.out.println("DATA: Generated " + packet);
+					if(rand.nextDouble() < Main.epsilon){
+						Main.addShadowPackets(destination, 2);	
+					}else{
+						Main.addShadowPackets(destination, 1);
+					}
+					synchronized(Main.dataPacketStatLock){
+						Main.dataPacketsGenerated++;
+					}
+				} catch (InterruptedException e) {
+					System.out.println("DATA: " + this + " Error adding packet to input buffer");
+					e.printStackTrace();
 				}
-				synchronized(Main.dataPacketStatLock){
-					Main.dataPacketsGenerated++;
-				}
-			} catch (InterruptedException e) {
-				System.out.println("DATA: " + this + " Error adding packet to input buffer");
-				e.printStackTrace();
 			}
+			
+			while(System.currentTimeMillis() - startTime < 1000){ }
+			startTime = System.currentTimeMillis();
 		}
 	}
 	

@@ -37,6 +37,8 @@ public class DataPacketSender extends Thread {
 			} catch (IOException e) {
 				System.out.println("DATA: " + this + ": Error sending " + packet);
 				e.printStackTrace();
+				System.out.println(e.getMessage());
+				
 				break;
 			}
 		}

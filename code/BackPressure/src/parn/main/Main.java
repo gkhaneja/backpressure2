@@ -212,7 +212,7 @@ public class Main {
 			for(int i=0; i<nFlows; i++){
 				line = reader.readLine();
 				parts = line.split("\t");				
-				flows.put(Integer.parseInt(parts[0]), new Flow(Integer.parseInt(parts[0]), Main.ID, Integer.parseInt(parts[1]), Double.parseDouble(parts[2])));
+				flows.put(Integer.parseInt(parts[0]), new Flow(Integer.parseInt(parts[0]), Main.ID, Integer.parseInt(parts[1]), Configurations.PACKET_RATE));
 			}
 			
 			

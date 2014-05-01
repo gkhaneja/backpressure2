@@ -108,20 +108,36 @@ public class Neighbor extends Thread {
 	}
 	
 	public void run(){
+		System.out.println(this + " Starting");
 		control = new Connection();
 		controlSocket= new Socket();
 		if(!createConnection(control, controlSocket)){
 			//TODO: Error handling on connection failure
+			System.out.println("Neighbor could not be connected");
 			return;
+		}else{
+			System.out.println(this + " is connected");
 		}
+		try {
+			control.out.flush();
+		} catch (IOException e1) {
+			e1.printStackTrace();
+		}
+		
 		
 		data = new Connection();
 		dataSocket= new Socket();
 		if(!createConnection(data, dataSocket)){
 			//TODO: Error handling on connection failure
+			System.out.println("Neighbor could not be connected");
 			return;
 		}else{
 			System.out.println(this + " is connected");
+		}
+		try {
+			data.out.flush();
+		} catch (IOException e1) {
+			e1.printStackTrace();
 		}
 		
 		//System.out.println("Starting threads");
@@ -164,7 +180,11 @@ public class Neighbor extends Thread {
 					try{
 						socket = new Socket(node.address,port);//, Main.nodes.get(Main.ID).address, Configurations.getAvailablePort());
 						//connected = true;
-						if(socket.isBound()) break;
+						
+						if(socket.isBound()){
+							System.out.println("DEBUG: Connected");
+							break;
+						}
 					}catch(IOException e){
 						System.out.println("Making another attempt...");
 						//e.printStackTrace();
