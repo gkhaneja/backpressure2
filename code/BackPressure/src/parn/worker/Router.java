@@ -23,6 +23,7 @@ public class Router extends Thread {
 	}
 	
 	public void run(){
+		try {
 		while(!Configurations.SYSTEM_HALT){
 			  	
 			  long time = System.currentTimeMillis() - Main.startTime;
@@ -78,6 +79,12 @@ public class Router extends Thread {
 			
 			
 			
+		}
+		}catch(Exception e){
+			System.out.println("DATA: FATAL: Router thread has gotten the follwoing error: ");
+			e.printStackTrace();
+			System.out.println("KILL: Killing the program");
+			System.exit(1);
 		}
 	}
 	

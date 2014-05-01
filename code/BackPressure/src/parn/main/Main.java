@@ -41,7 +41,7 @@ public class Main {
 	public static double epsilon;
 	public static int Capacity;
 	public static double stabilityDiff = 0.02;
-	public static long bandwidth = 1000000000 / 8;
+	public static long bandwidth = 1000000000 / (8);
 	public static int usePropSplitting = 0;
 	public static int initializeShadowQueues = 0;
 	public static long duration = 0;
@@ -95,7 +95,7 @@ public class Main {
 	public static Object dataPacketStatLock = new Object();
 	public static int dataPacketsSent=0;
 	public static int dataPacketsReceived=0;
-	public static int dataPacketSize=930;
+	public static int dataPacketSize=Configurations.PAYLOAD_SIZE;
 	//Not being used 
 	public static int averageDataPacketSize=0;
 	
@@ -156,7 +156,7 @@ public class Main {
 		//System.out.println(addrStr.length + " " + parts[1]);
 		byte[] addrByte = new byte[4];
 		for (int i=0;i<4;i++){
-			addrByte[i] = Byte.parseByte(addrStr[i]);
+			addrByte[i] = (byte) Integer.parseInt(addrStr[i]);
 		}									
 		InetAddress address = InetAddress.getByAddress(addrByte);
 		return address;

@@ -61,12 +61,14 @@ public class ShadowPacketGenerator extends Thread {
 			while(iterator.hasNext()){
 				Neighbor neighbor = Main.neighbors.get(iterator.next());
 				Iterator<Integer> destinations = neighbor.shadowQueues.keySet().iterator();
+				//HashMap<Integer, Integer> differences = new HashMap<Integer, Integer>();
 				int maxWeight = 0;
 				int winnerDest=-1;
 				while(destinations.hasNext()){
 					int dest = destinations.next();
 					//System.out.print( " " + Main.shadowQueues.get(dest).length + "-" + neighbor.shadowQueues.get(dest).length + "-" + Main.M);
 					int weight = Main.shadowQueues.get(dest).length - neighbor.shadowQueues.get(dest).length - Main.M;
+					//differences.put(dest, weight);
 					if(weight > maxWeight){
 						winnerDest = dest;
 						maxWeight  = weight;
@@ -83,7 +85,12 @@ public class ShadowPacketGenerator extends Thread {
 						nShadowPackets = (int) ((System.currentTimeMillis() - time) / Configurations.SLOW_DOWN_FACTOR);
 						printStr += "\tCONTROL: " + this + " DEBUG MODE: "  + nShadowPackets + " generated for  " + winnerDest;
 					}else{
-						nShadowPackets = (int) ((System.currentTimeMillis() - time)* Main.bandwidth / (2*Main.neighbors.size() * Main.dataPacketSize));
+						System.out.println("CONTROL: currTime: " + System.currentTimeMillis() + ", prevIterationTime: " + time);
+						long part1 = Main.bandwidth / Main.dataPacketSize;
+						//long part2 = 
+						long nShadowPacketsTemp = ((System.currentTimeMillis() - time)* part1 / (2*Main.neighbors.size() * 1000));
+						//long nShadowPacketsTemp = ((System.currentTimeMillis() - time)* Main.bandwidth / (2*Main.neighbors.size() * Main.dataPacketSize * 1000));
+						nShadowPackets = (int) nShadowPacketsTemp;
 						printStr += "\tCONTROL: " + this + " REAL MODE: "  + nShadowPackets + " generated for  " + winnerDest;
 					}
 					//TODO: lock for shadow queue

@@ -166,7 +166,8 @@ public class Neighbor extends Thread {
 						//connected = true;
 						if(socket.isBound()) break;
 					}catch(IOException e){
-						e.printStackTrace();
+						System.out.println("Making another attempt...");
+						//e.printStackTrace();
 					}
 					try {
 					    Thread.sleep(Configurations.CONN_ATTEMPT_SLEEP_TIME);
@@ -177,8 +178,9 @@ public class Neighbor extends Thread {
 				}
 				if(!socket.isBound()){
 					System.out.println(this + " cannot be connected");
-					
+					return false;
 				}
+				
 				connection.out = new ObjectOutputStream(socket.getOutputStream());
 				connection.out.flush();
 				connection.in = new ObjectInputStream(socket.getInputStream());
