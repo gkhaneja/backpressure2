@@ -11,15 +11,24 @@ public class DataPacket implements Serializable {
 	 */
 	private static final long serialVersionUID = 7219908023845170484L;
 	
+	public boolean batch=false;
+	
 	public int flowID;
 	public int source;
-	int ttl;
-	int hops;
 	public int destination;
-	public int sequenceNumber;
-	public ArrayList<Character> path;
 	public long time;
+	int ttl;
+	int hops;	
+	public ArrayList<Character> path;
+	
+	
+	public int sequenceNumber;
 	public byte[] payload;
+	
+	public int startSequenceNumber;
+	public int endSequenceNumber;
+	
+	
 	
 	
 	public DataPacket(int flowID, int source, int destination, int sequenceNumber){
@@ -35,7 +44,7 @@ public class DataPacket implements Serializable {
 		payload = new byte[Configurations.PAYLOAD_SIZE];
 	}
 
-	public DataPacket(int flowID, int source, int destination, int sequenceNumber, int payloadSize){
+	/*public DataPacket(int flowID, int source, int destination, int sequenceNumber, int payloadSize){
 		this.flowID = flowID;
 		this.source = source;
 		this.destination = destination;
@@ -45,8 +54,22 @@ public class DataPacket implements Serializable {
 		path = new ArrayList<Character>();
 		time = System.currentTimeMillis();
 		payload = new byte[payloadSize];
-	}
+	}*/
 
+	
+	public DataPacket(int flowID, int source, int destination, int startSequenceNumber, int endSequenceNumber, boolean batch){
+		this.batch=true;
+		this.flowID = flowID;
+		this.source = source;
+		this.destination = destination;
+		this.ttl = Configurations.MAX_HOP;
+		this.hops=0;
+		this.startSequenceNumber = startSequenceNumber;
+		this.endSequenceNumber = endSequenceNumber;
+		path = new ArrayList<Character>();
+		time = System.currentTimeMillis();
+		
+	}
 	
 	/*public void decrementTTL(){
 		ttl--;

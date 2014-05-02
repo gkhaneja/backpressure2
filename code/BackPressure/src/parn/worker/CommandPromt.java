@@ -50,6 +50,11 @@ public class CommandPromt extends Thread {
 		System.out.println("STAT: data packets received:  " + Main.dataPacketsReceived);
 		System.out.println();
 		
+		Iterator<Integer> iterator2 = Main.nodes.keySet().iterator();
+		while(iterator2.hasNext()){
+			Main.nodes.get(iterator2.next()).printProbs();
+		}
+		
 		Iterator<Integer> iterator = Main.flowStatReceived.keySet().iterator();
 		while(iterator.hasNext()){
 			//System.out.println("flow stats");

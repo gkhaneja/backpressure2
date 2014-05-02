@@ -8,6 +8,7 @@ src/parn/node/Neighbor.java
 src/parn/node/Node.java
 src/parn/packet/ControlPacket.java
 src/parn/packet/DataPacket.java
+src/parn/packet/PacketBatch.java
 src/parn/packet/ShadowQueue.java
 src/parn/worker/CommandPromt.java
 src/parn/worker/ControlPacketReceiver.java

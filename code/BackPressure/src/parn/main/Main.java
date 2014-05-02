@@ -95,7 +95,7 @@ public class Main {
 	public static Object dataPacketStatLock = new Object();
 	public static int dataPacketsSent=0;
 	public static int dataPacketsReceived=0;
-	public static int dataPacketSize=Configurations.PAYLOAD_SIZE;
+	public static int dataPacketSize=Configurations.PAYLOAD_SIZE + 450;
 	//Not being used 
 	public static int averageDataPacketSize=0;
 	
@@ -174,8 +174,8 @@ public class Main {
 			Main.epsilon = Double.parseDouble(parts[1]);
 			Main.usePropSplitting = Integer.parseInt(parts[2]);
 			Main.initializeShadowQueues = Integer.parseInt(parts[3]);
-			Main.duration = Long.parseLong(parts[4]);
-			Configurations.CONTROL_INTERVAL = Long.parseLong(parts[5]);
+			Main.duration = Configurations.DURATION;
+			//Configurations.CONTROL_INTERVAL = Long.parseLong(parts[5]);
 			
 			line = reader.readLine();
 			parts = line.split("\t");
@@ -368,9 +368,9 @@ public class Main {
 		synchronized(shadowQueueLock){
 			if(shadowQueues.containsKey(destination)){
 				shadowQueues.get(destination).update(nShadowPackets);
-				if(nShadowPackets==2){
-					Main.extraShadowPacketsGenerated++;
-				}
+//				if(nShadowPackets==2){
+//					Main.extraShadowPacketsGenerated++;
+//				}
 				Main.shadowPacketsGenerated += nShadowPackets;
 				
 			}

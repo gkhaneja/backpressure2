@@ -84,7 +84,7 @@ public class Node {
 	}
 	
 	public void printProbs(){
-		String ret = Configurations.hashToString(packetsPerLink);
+		String ret = Configurations.hashToString(probs);
 		System.out.println(this + ": " + ret);
 	}
 	
