@@ -26,39 +26,40 @@ import parn.worker.ShadowPacketGenerator;
 
 public class Main {
 
-	
+
 	//Entities
 	public static HashMap<Integer, Node> nodes;
 	public static HashMap<Integer, Neighbor> neighbors;
 	public static LinkedBlockingQueue<DataPacket> inputBuffer;
 	public static HashMap<Integer, ShadowQueue> shadowQueues;
-	
-	
+
+
 	//Global variables
 	public static int ID;
-	public static int nextFlowID;
-	public static int M;
-	public static double epsilon;
+	public static double M = 0;
+	public static double epsilon = 0;
 	public static int Capacity;
 	public static double stabilityDiff = 0.02;
 	public static long bandwidth = 1000000000 / (8);
-	public static int usePropSplitting = 0;
+	public static int usePropSplitting = 1;
 	public static int initializeShadowQueues = 0;
-	public static long duration = 0;
+	public static long duration = Configurations.DURATION;
 	public static long startTime = System.currentTimeMillis();
 	public static boolean error = false;
 	public static int iteration=0;
+	public static int TOP_K=1;
+	public static double shadowPaketRateFactor=1.0;
 	//phase: 0-sending/receiving to shadow packets (shadowPacketGenerator is active) , 1-sending/receiving to shadow queues (controlPacketSenders are active)
 	public static int iterationPhase=1;
 
-	
-	
+
+
 	//Threads
 	public static Router router;
 	public static ShadowPacketGenerator shadowPacketGenerator;
 	public static HashMap<Integer, Flow> flows;
 	public static CommandPromt commandPromt = new CommandPromt();
-	
+
 
 	//Locks and Notifiers
 	private static Object shadowQueueLock;
@@ -68,18 +69,22 @@ public class Main {
 	public static Object sentShadowQueueLock = new Object();
 	private static Object controlReceiverStatsLock = new Object();
 	private static Object controlSenderStatsLock = new Object();
-	
-	
+	public static Object extraShadowPacketGeneratedLock = new Object();
+	public static Object dataPacketsDroppedLock = new Object();
+	public static Object dataPacketsSentLock = new Object();
+	public static Object lastSecondDataPacketsSentLock = new Object();
+
+
 	//Shared and synchronized (lock protected) fields:
 	public static int nShadowQueueReceived = 0;
 	public static int nShadowQueuesSent=0;
 	public static int nShadowPacketReceived = 0;
-	
+
 	//Measurements per flow
 	public static HashMap<Integer, FlowStat> flowStatReceived = new HashMap<Integer, FlowStat>();
-	
-	
-	
+
+
+
 	//Measurements for shadow packets
 	//Can use the shadowQueueLock itself
 	public static int shadowPacketsGenerated=0;
@@ -87,18 +92,20 @@ public class Main {
 	public static int shadowPacketsReceived=0;
 	//No locking required for this one - since a single thread - ShadowQueueGenerator will generate shadow packets 
 	public static int shadowPacketsSent=0;
-	
-	
-	
+
+
+
 	//Measurements for data packets
 	public static int dataPacketsGenerated=0;
 	public static Object dataPacketStatLock = new Object();
 	public static int dataPacketsSent=0;
 	public static int dataPacketsReceived=0;
 	public static int dataPacketSize=Configurations.PAYLOAD_SIZE + 450;
+	public static int dataPacketsDropped=0;
 	//Not being used 
 	public static int averageDataPacketSize=0;
-	
+	public static int lastSecondDataPacketsSent=0;
+
 	//Measurements for control packets
 	public static int controlPacketsSent=0;
 	public static int controlPacketsReceived=0;
@@ -106,51 +113,52 @@ public class Main {
 	public static int controlBytesReceived=0;
 
 	public static boolean init(String confFile){
-		//TODO: change static id assignment: Done
-		//ID=id;
-		nodes = new HashMap<Integer, Node>();
-		neighbors = new HashMap<Integer, Neighbor>();
-		inputBuffer = new LinkedBlockingQueue<DataPacket>();
-		shadowQueues = new HashMap<Integer, ShadowQueue>();
-		flows = new HashMap<Integer, Flow>();
-		router = new Router();
-		shadowPacketGenerator = new ShadowPacketGenerator();
-		nextFlowID=0;
-		nShadowQueueReceived=0;
-		M=0;
-		epsilon=0.1;
-		//TODO: change this. For testing.
-		Capacity = 1;	
-		shadowQueueLock= new Object();
-		receivedShadowQueueLock = new Object();
-		receivedShadowPacketLock = new Object();
+		try{
+			//TODO: change static id assignment: Done
+			//ID=id;
+			nodes = new HashMap<Integer, Node>();
+			neighbors = new HashMap<Integer, Neighbor>();
+			inputBuffer = new LinkedBlockingQueue<DataPacket>();
+			shadowQueues = new HashMap<Integer, ShadowQueue>();
+			flows = new HashMap<Integer, Flow>();
+			router = new Router();
+			shadowPacketGenerator = new ShadowPacketGenerator();	
+			shadowQueueLock= new Object();
+			receivedShadowQueueLock = new Object();
+			receivedShadowPacketLock = new Object();
+
+			if(!parseConfFile2(confFile)) return false;
+
+			//Initializations
+			initNeighbors();			
+			Iterator<Integer> iterator = nodes.keySet().iterator();
+			while(iterator.hasNext()){
+				nodes.get(iterator.next()).init();
+			}
+			printNodes();
+			printNeighbors();
+			System.out.println("Given id: " + Main.ID);
+			System.out.println("No. of nodes: " + nodes.size());
+			System.out.println("No. of neighbors: " + neighbors.size());
+
+			startConnectionWorkers();
+			generateFlows();
+
+			shadowPacketGenerator.start();
+			router.start();
+			commandPromt.start();
 		
-		if(!parseConfFile2(confFile)) return false;
-		
-		//Initializations
-		initNeighbors();			
-		Iterator<Integer> iterator = nodes.keySet().iterator();
-		while(iterator.hasNext()){
-			nodes.get(iterator.next()).init();
+		}catch(Throwable e){
+			e.printStackTrace();
+			System.out.println("MAIN: FATAL ERROR");
+			Configurations.FATAL_ERROR = true;
 		}
-		printNodes();
-		printNeighbors();
-		System.out.println("Given id: " + Main.ID);
-		System.out.println("No. of nodes: " + nodes.size());
-		System.out.println("No. of neighbors: " + neighbors.size());
 
-		startConnectionWorkers();
-		generateFlows();
-		
-		shadowPacketGenerator.start();
-		router.start();
-		commandPromt.start();
 
-		
 
 		return true;
 	}
-	
+
 	public static InetAddress getAddress(String ip) throws UnknownHostException{
 		String[] addrStr = ip.split("\\.");
 		//System.out.println(addrStr.length + " " + parts[1]);
@@ -161,31 +169,31 @@ public class Main {
 		InetAddress address = InetAddress.getByAddress(addrByte);
 		return address;
 	}
-	
+
 	public static boolean parseConfFile2(String confFile){
 		try{
 			BufferedReader reader = new BufferedReader(new FileReader(new File(confFile)));
 			String line;
 			String[] parts;
- 			//first line contains M, epsilon, prop, pathlength, time
+			//first line contains M, epsilon, prop, pathlength, time
 			line = reader.readLine();
 			parts = line.split("\t");
-			Main.M = Integer.parseInt(parts[0]);
-			Main.epsilon = Double.parseDouble(parts[1]);
-			Main.usePropSplitting = Integer.parseInt(parts[2]);
-			Main.initializeShadowQueues = Integer.parseInt(parts[3]);
-			Main.duration = Configurations.DURATION;
+			//Main.M = Integer.parseInt(parts[0]);
+			//Main.epsilon = Double.parseDouble(parts[1]);
+			//Main.usePropSplitting = Integer.parseInt(parts[2]);
+			//Main.initializeShadowQueues = Integer.parseInt(parts[3]);
+			//Main.duration = Long.parseLong(parts[4]);
 			//Configurations.CONTROL_INTERVAL = Long.parseLong(parts[5]);
-			
+
 			line = reader.readLine();
 			parts = line.split("\t");
 			Main.ID = Integer.parseInt(parts[1]);
-			
+
 			line = reader.readLine();
 			parts = line.split("\t");			
 			nodes.put(Main.ID, new Node(Main.ID, Main.getAddress(parts[1])));
 			shadowQueues.put(Main.ID, new ShadowQueue(Main.ID, 0));
-			
+
 			line = reader.readLine();
 			parts = line.split("\t");			
 			int nNeighbors = Integer.parseInt(parts[1]);			
@@ -194,7 +202,7 @@ public class Main {
 				parts = line.split("\t");
 				neighbors.put(Integer.parseInt(parts[0]), new Neighbor(Integer.parseInt(parts[2])));
 			}
-			
+
 			line = reader.readLine();
 			parts = line.split("\t");			
 			int nNodes = Integer.parseInt(parts[1]);			
@@ -203,9 +211,14 @@ public class Main {
 				parts = line.split("\t");			
 				int nodeId = Integer.parseInt(parts[0]);
 				nodes.put(nodeId, new Node(Integer.parseInt(parts[0]), Main.getAddress(parts[1]), Integer.parseInt(parts[2])));
-				shadowQueues.put(nodeId, new ShadowQueue(nodeId, 0));
+				if(initializeShadowQueues==1){
+					System.out.println("CONTROL: Initializing shadow queue " + nodeId + " with " + Integer.parseInt(parts[2]));
+					shadowQueues.put(nodeId, new ShadowQueue(nodeId, Integer.parseInt(parts[2])));
+				}else{
+					shadowQueues.put(nodeId, new ShadowQueue(nodeId, 0));
+				}
 			}
-			
+
 			line = reader.readLine();
 			parts = line.split("\t");			
 			int nFlows = Integer.parseInt(parts[1]);			
@@ -214,8 +227,8 @@ public class Main {
 				parts = line.split("\t");				
 				flows.put(Integer.parseInt(parts[0]), new Flow(Integer.parseInt(parts[0]), Main.ID, Integer.parseInt(parts[1]), Configurations.PACKET_RATE));
 			}
-			
-			
+
+
 			reader.close();
 		}catch(FileNotFoundException e){
 			e.printStackTrace();
@@ -227,7 +240,7 @@ public class Main {
 		}
 		return true;
 	}
-	
+
 	public static boolean parseConfFile(String confFile){
 		try {
 			BufferedReader reader = new BufferedReader(new FileReader(new File(confFile)));
@@ -265,20 +278,20 @@ public class Main {
 			return false;
 		}
 	}
-	
-	
+
+
 	public static void notifyShadowQueueArrival(){
 		synchronized(receivedShadowQueueLock){
 			nShadowQueueReceived++;
 			System.out.println("CONTROL: Received " + nShadowQueueReceived + " shadow-queues for iteration " + Main.iteration);
 			if(nShadowQueueReceived == Main.neighbors.size()){
-				
+
 				receivedShadowQueueLock.notifyAll();
 			}
 		}
-		
+
 	}
-	
+
 	public static void notifyShadowPacketArrival(){
 		synchronized(receivedShadowPacketLock){
 			nShadowPacketReceived++;
@@ -288,7 +301,7 @@ public class Main {
 			}
 		}
 	}
-	
+
 	public static void updateControlReceiverStats(ControlPacket packet){
 		synchronized(Main.controlReceiverStatsLock){
 			try {
@@ -299,7 +312,7 @@ public class Main {
 			}
 		}
 	}
-	
+
 	public static void updateControlSenderStats(ControlPacket packet){
 		synchronized(Main.controlSenderStatsLock){
 			try {
@@ -310,25 +323,33 @@ public class Main {
 			}
 		}
 	}
-	
-	
-	
+
+	public static String getRealQueues(){
+		String ret = "";
+		Iterator<Integer> iterator = neighbors.keySet().iterator();
+		while(iterator.hasNext()){
+			int neighbor = iterator.next();
+			ret += neighbor + ":" + neighbors.get(neighbor).realQueue.size() + ", ";
+		}
+		return ret;
+	}
+
 	public static HashMap<Integer, ShadowQueue> getShadowQueues(){
 		//TODO: Do we need locking here - synchronized with Main.updateShadowQueue(dest, change) ?
 		//TODO: Should we send the reference to original or should we return a copy (expensive) ?
 		return Main.shadowQueues;
 	}
-	
+
 	public static void updateShadowQueue(ControlPacket packet){
 		if(packet.type!=Configurations.SHADOW_PACKET_TYPE){
 			System.out.println("ERROR: updateShadowQueue: wrong packet " + packet);
 			return;
 		}
-		
+
 		if(packet.shadowPackets.size() > 1){
 			System.out.println("CONTROL: INFO: Proportional splitting is ON");
 		}
-		
+
 		synchronized(shadowQueueLock){
 			Iterator<Integer> iterator = packet.shadowPackets.keySet().iterator();			
 			while(iterator.hasNext()){
@@ -346,7 +367,7 @@ public class Main {
 			Main.notifyShadowPacketArrival();
 		}
 	}
-	
+
 	public static void updateShadowQueueDropped(int destination){
 		if(destination==Main.ID){
 			return;
@@ -357,54 +378,52 @@ public class Main {
 			}	
 		}
 	}
-	
+
 	//Just used by flow generators to add shadow packets to shadow queues
 	public static void addShadowPackets(int destination, int nShadowPackets){
-		
-		
+
+
 		if(destination==Main.ID){
 			return;
 		}
 		synchronized(shadowQueueLock){
 			if(shadowQueues.containsKey(destination)){
 				shadowQueues.get(destination).update(nShadowPackets);
-//				if(nShadowPackets==2){
-//					Main.extraShadowPacketsGenerated++;
-//				}
+				//				if(nShadowPackets==2){
+				//					Main.extraShadowPacketsGenerated++;
+				//				}
 				Main.shadowPacketsGenerated += nShadowPackets;
-				
+
 			}
 		}
-		
+
 	}
-	
+
 	public static void startConnectionWorkers(){
 		Iterator<Integer> neighborIterator = neighbors.keySet().iterator();
 		while(neighborIterator.hasNext()){
 			int neighborId = neighborIterator.next();
 			Neighbor neighbor = neighbors.get(neighborId);
 
-			
+
 			neighbor.start();
 		}
 	}
-	
+
 	public static void initNeighbors(){
 		Iterator<Integer> neighborIterator = neighbors.keySet().iterator();
 		while(neighborIterator.hasNext()){
 			int neighborId = neighborIterator.next();
 			Neighbor neighbor = neighbors.get(neighborId);
 			neighbor.node = nodes.get(neighborId);
-			
+
 		}
 	}
 
 	public static void generateFlows(){
-		//TODO: For testing, generating preset flow-pattern - One flow for each node. This should be replaced appropriately. 
 		if(Configurations.TURN_OFF_FLOWS){
 			return;
-		}
-		Random rand = new Random();
+		}		
 		Iterator<Integer> iterator = flows.keySet().iterator();
 		while(iterator.hasNext()){
 			int flowId = iterator.next();
@@ -418,16 +437,16 @@ public class Main {
 
 	public static int sizeof(Object obj) throws IOException {
 
-        ByteArrayOutputStream byteOutputStream = new ByteArrayOutputStream();
-        ObjectOutputStream objectOutputStream = new ObjectOutputStream(byteOutputStream);
+		ByteArrayOutputStream byteOutputStream = new ByteArrayOutputStream();
+		ObjectOutputStream objectOutputStream = new ObjectOutputStream(byteOutputStream);
 
-        objectOutputStream.writeObject(obj);
-        objectOutputStream.flush();
-        objectOutputStream.close();
+		objectOutputStream.writeObject(obj);
+		objectOutputStream.flush();
+		objectOutputStream.close();
 
-        return byteOutputStream.toByteArray().length;
-    }
-	
+		return byteOutputStream.toByteArray().length;
+	}
+
 	static void printNeighbors(){
 		System.out.println("Neighbors:");
 		Iterator<Integer> neighborIterator = neighbors.keySet().iterator();

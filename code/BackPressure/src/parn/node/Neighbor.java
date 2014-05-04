@@ -70,7 +70,7 @@ public class Neighbor extends Thread {
 		shadowPackets = new HashMap<Integer, Integer>();
 	}
 	
-	//TODO: No need to initialize neighbors shadow queue, right ? 
+	//TODO: No need to initialize neighbors shadow queue, right ? Yup, need to when shadowQueueInit is used
 	//public initializeShadowQueues(){
 	//}
 	
@@ -112,7 +112,7 @@ public class Neighbor extends Thread {
 		control = new Connection();
 		controlSocket= new Socket();
 		if(!createConnection(control, controlSocket)){
-			//TODO: Error handling on connection failure
+			
 			System.out.println("Neighbor could not be connected");
 			return;
 		}else{
@@ -128,7 +128,7 @@ public class Neighbor extends Thread {
 		data = new Connection();
 		dataSocket= new Socket();
 		if(!createConnection(data, dataSocket)){
-			//TODO: Error handling on connection failure
+			
 			System.out.println("Neighbor could not be connected");
 			return;
 		}else{

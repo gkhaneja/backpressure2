@@ -30,31 +30,22 @@ public class DataPacketReceiver extends Thread {
 					Main.inputBuffer.put(packet);
 				}else{					
 					Main.updateShadowQueueDropped(packet.destination);
+					synchronized(Main.dataPacketsDroppedLock){
+						Main.dataPacketsDropped++;
+					}
 				}
 				//System.out.println("DATA: " + this + ": received " + packet);
 
-			} catch (IOException e) {
-				System.out.println("DATA: " + this + " Error receving data packets");
-				//e.printStackTrace();
-				break;
-			} catch (InterruptedException e) {
-				System.out.println("DATA: " + this + " Error adding packet to input buffer");
-				//e.printStackTrace();
-				break;
-			}catch (ClassNotFoundException e) {
-				System.out.println("DATA: " + this + " Error adding packet to input buffer");
-				//e.printStackTrace();
-				break;
+			
+			}catch(Throwable e){
+				e.printStackTrace();
+				System.out.println(this + " FATAL ERROR " + e.getMessage());
+				Configurations.FATAL_ERROR = true;
 			}
 			
 		
 		}
-		try {
-			connection.close();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		
 	}
 	
 	public String toString(){

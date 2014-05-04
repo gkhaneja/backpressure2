@@ -29,6 +29,11 @@ public class Node {
 	
 	
 	
+	Random rand = new Random();
+	
+	
+	
+	
 	public Node(int id, InetAddress address) {
 		super();
 		this.id = id;
@@ -104,7 +109,7 @@ public class Node {
 	}
 	
 	public int getTokenBucket(){
-		Random rand = new Random();
+		
 		int smallestTokenBucket=-1;
 		int smallestTokenBucketValue=0;
 		int first=1;
@@ -117,6 +122,11 @@ public class Node {
 				smallestTokenBucketValue = tokenBucketValue;
 				first=0;
 			}
+		}
+		//This node is also the neighbor
+		if(Main.neighbors.containsKey(id)){
+			smallestTokenBucket = id;
+			smallestTokenBucketValue = tokenBuckets.get(id);
 		}
 		packetsPerLink.put(smallestTokenBucket, packetsPerLink.get(smallestTokenBucket) + 1);
 		packetsTotal++;

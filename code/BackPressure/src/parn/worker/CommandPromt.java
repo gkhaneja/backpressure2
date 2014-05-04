@@ -7,8 +7,8 @@ import parn.main.Configurations;
 import parn.main.Main;
 
 public class CommandPromt extends Thread {
-	
-	
+
+
 	public void run(){
 		Scanner scanner = new Scanner(System.in);
 		while(scanner.hasNext()){
@@ -24,42 +24,51 @@ public class CommandPromt extends Thread {
 			}
 		}
 	}
-	
-	public  static void printStats(){
-		System.out.println("STAT: time: " + (System.currentTimeMillis() - Main.startTime));
-		System.out.println("STAT: The system encountered an error. " + Main.error);
-		System.out.println("STAT: No. of iterations: " + Main.iteration );
-		System.out.println("STAT: Stable iteration: " + Configurations.stableIterations);
-		System.out.println("STAT: Stable time: " + Configurations.stableTime);
-		System.out.println();
-		
-		System.out.println("STAT: shadow packets generated: " + Main.shadowPacketsGenerated);
-		System.out.println("STAT: Extra shadow packets generated:  " + Main.extraShadowPacketsGenerated);
-		System.out.println("STAT: shadow packets sent:  " + Main.shadowPacketsSent);
-		System.out.println("STAT: shadow packets received:  " + Main.shadowPacketsReceived);
-		System.out.println();
 
-		System.out.println("STAT: Control Bytes sent: " + Main.controlBytesSent);
-		System.out.println("STAT: Control Packets sent : " + Main.controlPacketsSent);
-		System.out.println("STAT: Control bytes received: " + Main.controlBytesReceived);
-		System.out.println("STAT: Control packets received: " + Main.controlPacketsReceived);
-		System.out.println();
+	public  static void printStats(){
+		try{
+			System.out.println("STAT: time: " + (System.currentTimeMillis() - Main.startTime));
+			System.out.println("STAT: The system encountered an error. " + Main.error);
+			System.out.println("STAT: No. of iterations: " + Main.iteration );
+			System.out.println("STAT: Stable iteration: " + Configurations.stableIterations);
+			System.out.println("STAT: Stable time: " + Configurations.stableTime);
+			System.out.println("STAT:");
+
+			System.out.println("STAT: shadow packets generated: " + Main.shadowPacketsGenerated);
+			System.out.println("STAT: Extra shadow packets generated:  " + Main.extraShadowPacketsGenerated);
+			System.out.println("STAT: shadow packets sent:  " + Main.shadowPacketsSent);
+			System.out.println("STAT: shadow packets received:  " + Main.shadowPacketsReceived);
+			System.out.println("STAT:");
+
+			System.out.println("STAT: Control Bytes sent: " + Main.controlBytesSent);
+			System.out.println("STAT: Control Packets sent : " + Main.controlPacketsSent);
+			System.out.println("STAT: Control bytes received: " + Main.controlBytesReceived);
+			System.out.println("STAT: Control packets received: " + Main.controlPacketsReceived);
+			System.out.println("STAT:");
+
+			System.out.println("STAT: data packets generated: " + Main.dataPacketsGenerated);
+			System.out.println("STAT: data packets sent:  " + Main.dataPacketsSent);
+			System.out.println("STAT: data packets received:  " + Main.dataPacketsReceived);
+			System.out.println("STAT: data packets dropped:  " + Main.dataPacketsDropped);
+			System.out.println("STAT:");
+
+			System.out.println("Probs");
+			Iterator<Integer> iterator2 = Main.nodes.keySet().iterator();
+			while(iterator2.hasNext()){
+				System.out.print("STAT: "); Main.nodes.get(iterator2.next()).printProbs();
+			}
+			System.out.println();
+			Iterator<Integer> iterator = Main.flowStatReceived.keySet().iterator();
+			while(iterator.hasNext()){
+				//System.out.println("flow stats");
+				System.out.println(Main.flowStatReceived.get(iterator.next()));
+
+			}
 		
-		System.out.println("STAT: data packets generated: " + Main.dataPacketsGenerated);
-		System.out.println("STAT: data packets sent:  " + Main.dataPacketsSent);
-		System.out.println("STAT: data packets received:  " + Main.dataPacketsReceived);
-		System.out.println();
-		
-		Iterator<Integer> iterator2 = Main.nodes.keySet().iterator();
-		while(iterator2.hasNext()){
-			Main.nodes.get(iterator2.next()).printProbs();
-		}
-		
-		Iterator<Integer> iterator = Main.flowStatReceived.keySet().iterator();
-		while(iterator.hasNext()){
-			//System.out.println("flow stats");
-			System.out.println(Main.flowStatReceived.get(iterator.next()));
-			
+		}catch(Throwable e){
+			e.printStackTrace();
+			System.out.println("STAT: FATAL ERROR: " + e.getMessage());
+			Configurations.FATAL_ERROR = true;
 		}
 	}
 }
