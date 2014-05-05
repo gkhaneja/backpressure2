@@ -2,6 +2,7 @@ package parn.worker;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.util.HashMap;
 
 import parn.main.Configurations;
 import parn.main.Main;
@@ -40,8 +41,12 @@ public class ControlPacketReceiver extends Thread {
 							}
 						}
 					}
-					System.out.println("CONTROL: " + this + " received " + packet);
+					if(Main.verbose){
+						System.out.println("CONTROL: " + this + " received " + packet);
+					}
 					neighbor.updateShadowQueue(packet);
+					
+					
 
 				}else { 
 
@@ -54,8 +59,14 @@ public class ControlPacketReceiver extends Thread {
 							}
 						}
 					}
-					System.out.println("CONTROL: " + this + " received " + packet);
-					Main.updateShadowQueue(packet);
+					if(Main.verbose){
+						System.out.println("CONTROL: " + this + " received " + packet);
+					}
+					Main.updateShadowQueue(packet, neighbor.node.id);
+					
+					/*HashMap<Integer, Integer> temp = Main.toknRecv.get(id);
+					temp.put(smallestTokenBucket, temp.get(smallestTokenBucket) + 1);
+					Main.toknRecv.put(id, temp);*/
 
 				}
 

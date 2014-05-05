@@ -16,7 +16,7 @@ public class Configurations {
 	
 	public static final int PAYLOAD_SIZE=1000;
 	public static long CONTROL_INTERVAL=1000;
-	public static final int PACKET_RATE=100;
+	public static final int PACKET_RATE=500;
 	public static final int DURATION=180000;
 	
 	//Switches

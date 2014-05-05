@@ -98,7 +98,9 @@ public class Neighbor extends Thread {
 		ControlPacket packet = new ControlPacket(Main.ID, node.id, Configurations.SHADOW_PACKET_TYPE);
 		packet.shadowPackets = shadowPackets;
 		try {
-			System.out.println("CONTROL: sending " + packet);
+			if(Main.verbose){
+				System.out.println("CONTROL: sending " + packet);
+			}
 			control.out.writeObject(packet);
 		} catch (IOException e) {
 			System.out.println(this + ": Error sending " + packet);

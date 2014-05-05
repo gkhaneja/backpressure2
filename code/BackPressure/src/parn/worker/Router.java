@@ -1,5 +1,7 @@
 package parn.worker;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 
 import parn.main.Configurations;
@@ -11,20 +13,23 @@ import parn.packet.DataPacket;
 
 public class Router extends Thread {
 
-	long lastTime=0;
+	
 	
 	int batchCount = 0;
 	
 	
 	public static int nPacket=0;
 	public static int nPacket2=0;
+	
 	public static double packetRate=0;
 	public static double packetRate2=0;
 	public static double packetRate3=0;
 	public static double packetRate4=0;
+	
 	long startTime;
 	long currTime;
 	long rateLastTime;
+	long lastTime;
 	
 	public static String getAllTokenBucketsString(){
 		String str = "";
@@ -35,10 +40,73 @@ public class Router extends Thread {
 		return str;
 	}
 
+	public static String getAllShdwPacketStats(){
+		
+		ArrayList<Integer> neighborList = new ArrayList<Integer>();
+		for(Integer neighbor : Main.neighbors.keySet()){
+			neighborList.add(neighbor);
+		}
+		Collections.sort(neighborList);
+		
+		String ret = "ShadowPackets\nDst\tGen\tDrp\t";
+		for(int i=0;i<neighborList.size(); i++){
+			ret += "+" + neighborList.get(i) + "\t";
+		}
+		for(int i=0;i<neighborList.size(); i++){
+			ret += "-" + neighborList.get(i) + "\t";
+		}
+		ret += "\n";
+		Iterator<Integer> it = Main.nodes.keySet().iterator();
+		while(it.hasNext()){
+			int dest = it.next();
+			ret += dest + "\t" + Main.shdwGen.get(dest) + "\t" + Main.shdwDrop.get(dest) + "\t";
+			for(int i=0;i<neighborList.size(); i++){
+				ret += Main.shdwRecv.get(dest).get(neighborList.get(i)) + "\t";
+			}
+			for(int i=0;i<neighborList.size(); i++){
+				ret += Main.shdwSent.get(dest).get(neighborList.get(i)) + "\t";
+			}
+			 ret += "\n";
+		}
+		return ret;
+	}
+	
+public static String getAllTokenBucketStats(){
+		
+		ArrayList<Integer> neighborList = new ArrayList<Integer>();
+		for(Integer neighbor : Main.neighbors.keySet()){
+			neighborList.add(neighbor);
+		}
+		Collections.sort(neighborList);
+		
+		String ret = "Token Buckets\nDst\t";
+		for(int i=0;i<neighborList.size(); i++){
+			ret += "+" + neighborList.get(i) + "\t";
+		}
+		for(int i=0;i<neighborList.size(); i++){
+			ret += "-" + neighborList.get(i) + "\t";
+		}
+		ret += "\n";
+		Iterator<Integer> it = Main.nodes.keySet().iterator();
+		while(it.hasNext()){
+			int dest = it.next();
+			ret += dest + "\t";
+			for(int i=0;i<neighborList.size(); i++){
+				ret += Main.toknRecv.get(dest).get(neighborList.get(i)) + "\t";
+			}
+			for(int i=0;i<neighborList.size(); i++){
+				ret += Main.toknSent.get(dest).get(neighborList.get(i)) + "\t";
+			}
+			 ret += "\n";
+		}
+		return ret;
+	}
+	
 	public void run(){
 		startTime = System.currentTimeMillis();
 		currTime = System.currentTimeMillis();
-		rateLastTime = System.currentTimeMillis();
+		rateLastTime = 0;
+		lastTime=0;
 		
 		try {
 			while(!Configurations.SYSTEM_HALT){
@@ -46,16 +114,37 @@ public class Router extends Thread {
 				
 				
 				long time = System.currentTimeMillis() - Main.startTime;
+				
+				//Printing Block : executes after every 1 second
 				if(time - lastTime > 1000){
-					System.out.println("INFO: " + time + " / " + Main.duration);
-					//System.out.println("DATA: TokenBuckets: \t" + getAllTokenBucketsString());
-					System.out.println("RealQueue: " + Main.getRealQueues() + " inputBuffer: " + Main.inputBuffer.size());
-					System.out.println("TokenBuckets: " + Router.getAllTokenBucketsString());
-					lastTime = time;
+					
+					if(Main.DEBUG){
+						String str="";					
+						synchronized(Main.lastLock){
+							str += "INFO: " + time + " / " + Main.duration + "\n";
+							str += "[" + Main.iteration + "]DataPacketsGenerated: " + Main.lastDataPacketsGenerated + ", DataPacketsReceived: " + Main.lastDataPacketsReceived + ", DataPacketsSent: " + Main.lastDataPacketsSent + ", DataPacketsConsumed: " + Main.lastDataPacketsConsumed + "\n";
+							str += "[" + Main.iteration + "]ShdwPacketsGenerated: " + Main.lastShadowPacketsGenerated + ", ShdwPacketsReceived: " + Main.lastShadowPacketsReceived + ", ShdwPacketsSent: " + Main.lastShadowPacketsSent + "\n";
+							str += "[" + Main.iteration + "] RealQueue: " + Main.getRealQueues() + " inputBuffer: " + Main.inputBufferSize + "\n";
+							str += "[" + Main.iteration + "]TokenBuckets: " + Router.getAllTokenBucketsString() + "\n";
+							str += "[" + Main.iteration + "]ShadowQueues:" + Configurations.hashToString(Main.getShadowQueues()) + "\n";
+							str += "[" + Main.iteration + "]packetRate: " + packetRate + " packetRate2: " + packetRate2 + " packetRate3: " + packetRate3 + " packetRate4 " + packetRate4;
+							str += "\n";
+							str += getAllShdwPacketStats() + "\n";
+							str += getAllTokenBucketStats() + "\n";
+							System.out.println(str + "\n\n\n");
+							Main.lastDataPacketsConsumed = Main.lastDataPacketsGenerated = Main.lastDataPacketsReceived = Main.lastDataPacketsSent = 0;
+							Main.lastShadowPacketsGenerated = Main.lastShadowPacketsReceived = Main.lastShadowPacketsSent = 0;
+							Main.resetStats();
+							lastTime = time;
+						}
+					}
+					
 					
 				}
 				
 				
+				
+				//Data Packet rate calculation blocks : executes after every 1 second
 				nPacket++;
 				nPacket2++;
 				currTime = System.currentTimeMillis();
@@ -66,20 +155,19 @@ public class Router extends Thread {
 					packetRate2 = nPacket2*1000.0 / (currTime - startTime);
 					packetRate3 = Main.dataPacketsSent * 1000.0 / (currTime - startTime);
 					
-					synchronized(Main.lastSecondDataPacketsSentLock){
-						packetRate4 = Main.lastSecondDataPacketsSent * 1000.0 / (currTime - rateLastTime) ;
-						Main.lastSecondDataPacketsSent=0;
+					synchronized(Main.lastDataPacketsSentLock){
+						packetRate4 = Main.lastDataPacketsSent2 * 1000.0 / (currTime - rateLastTime) ;
+						Main.lastDataPacketsSent2=0;
 					}
 					rateLastTime = currTime;
-					System.out.println("DATA: " + this + " packetRate: " + packetRate + " packetRate2: " + packetRate2 + " packetRate3: " + packetRate3 + " currTime: " + currTime / 1000);
+					if(Main.verbose){
+						System.out.println("DATA: " + this + " packetRate: " + packetRate + " packetRate2: " + packetRate2 + " packetRate3: " + packetRate3 + " packetRate4 " + packetRate4 );
+					}
 					
-					
-					
-					
-					
-					//packetRate = packetRate*4.0/5.0 + 1000.0*nPacket/((time - lastTime)*5.0);
 				}
 				
+				
+				//
 				if (System.currentTimeMillis() - Main.startTime > Main.duration || Configurations.FATAL_ERROR){
 					Configurations.SYSTEM_HALT = true;
 					//System.out.println("INFO: Stopping the system");
@@ -132,7 +220,12 @@ public class Router extends Thread {
 				
 				//TokenBucket algorithm
 				packet.path.add((char) Main.ID);	
-				Main.dataPacketsReceived++;
+				Main.dataPacketsRouted++;
+				
+				synchronized(Main.inputBufferSizeLock){
+					Main.inputBufferSize--;
+				}
+				
 				if(packet.destination == Main.ID){
 					consumePacket(packet);
 				} else if(Main.nodes.containsKey(packet.destination)){
@@ -156,9 +249,7 @@ public class Router extends Thread {
 				}
 
 
-//				packetRate = packetRate*4.0/5.0 + 1000.0/((oneMoreTime - System.currentTimeMillis())*5.0);
-//				oneMoreTime = System.currentTimeMillis();
-//				System.out.println("DATA: " + this + " packetRate: " + packetRate + " oneMoreTime: " + oneMoreTime);
+
 
 			}
 		
@@ -177,6 +268,9 @@ public class Router extends Thread {
 			Main.flowStatReceived.get(packet.source).addPacket(packet);
 		}else{
 			Main.flowStatReceived.put(packet.source, new FlowStat(packet));
+		}
+		synchronized(Main.lastLock){
+			Main.lastDataPacketsConsumed++;
 		}
 	}
 

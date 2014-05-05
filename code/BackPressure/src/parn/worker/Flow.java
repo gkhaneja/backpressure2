@@ -28,29 +28,23 @@ public class Flow extends Thread {
 
 
 	public void run(){
-		
+
 		try{
 			long startTime = System.currentTimeMillis();
-			double frequency =   1.0/rate;
-			//System.out.println("Sleep time is " + sleepTime);
+
+
 			while(!Configurations.SYSTEM_HALT){
-
-				/*try{
-				sleep((long) sleepTime*1000);
-			}catch(InterruptedException e){
-				System.out.println(this + " got interrupted");
-			}*/
-
-				//TODO: Add data and shadow packet in batches
-
 
 				DataPacket packet = new DataPacket(id, source, destination, sequenceNumber, sequenceNumber + rate - 1, true);
 				sequenceNumber += rate;
 
-				
-					Main.inputBuffer.put(packet);
-					//System.out.println("DATA: Generated " + packet);				
-				
+
+				Main.inputBuffer.put(packet);
+
+				if(Main.verbose) {
+					System.out.println("DATA: Generated " + packet);				
+				}
+
 				int intPart = (int) (rate*Main.epsilon);
 				int nShadowPackets = rate + intPart;
 				double probLimit = rate*Main.epsilon - (double) intPart;
@@ -61,25 +55,47 @@ public class Flow extends Thread {
 					nShadowPackets++;
 					extraPacketAdded=1;
 				}
-				System.out.println("DATA: " + this + ": intPart " + intPart + " prob " + probLimit + " nShadowPackets " + nShadowPackets + " rate " + rate);
+				if(Main.verbose) {
+					System.out.println("DATA: " + this + ": intPart " + intPart + " prob " + probLimit + " nShadowPackets " + nShadowPackets + " rate " + rate);
+				}
 				Main.addShadowPackets(destination, nShadowPackets);
 
 				synchronized(Main.dataPacketStatLock){
 					Main.dataPacketsGenerated+= rate;
 				}
+				
+				synchronized(Main.inputBufferSizeLock){
+					Main.inputBufferSize += rate;
+				}
+
+				if(Main.DEBUG){
+					synchronized(Main.lastLock){
+						synchronized(Main.lastDataPacketsGeneratedLock){
+							Main.lastDataPacketsGenerated += rate;
+						}
+
+						synchronized(Main.lastShadowPacketsGeneratedLock){
+							Main.lastShadowPacketsGenerated += rate + intPart + extraPacketAdded;
+						}
+					}
+				}
+
+
 
 				synchronized(Main.extraShadowPacketGeneratedLock){
 					Main.extraShadowPacketsGenerated += intPart + extraPacketAdded;
 				}
 
 				String str = this + " generated packets at " + (System.currentTimeMillis() - Main.startTime);
-				//while(System.currentTimeMillis() - startTime < 1000){ }
-				
-					if(1000 - System.currentTimeMillis()  + startTime > 0){
-						sleep(1000 - System.currentTimeMillis()  + startTime);
-					}
-				
-				System.out.println(str + ". Starting again at " + (System.currentTimeMillis() - Main.startTime));				
+
+
+				if(1000 - System.currentTimeMillis()  + startTime > 0){
+					sleep(1000 - System.currentTimeMillis()  + startTime);
+				}
+
+				if(Main.verbose) {
+					System.out.println(str + ". Starting again at " + (System.currentTimeMillis() - Main.startTime));				
+				}
 				startTime = System.currentTimeMillis();
 			}
 		}catch(Throwable e){

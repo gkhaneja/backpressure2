@@ -11,7 +11,6 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Random;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import parn.node.Neighbor;
@@ -23,6 +22,7 @@ import parn.worker.CommandPromt;
 import parn.worker.Flow;
 import parn.worker.Router;
 import parn.worker.ShadowPacketGenerator;
+import parn.worker.Terminator;
 
 public class Main {
 
@@ -36,8 +36,8 @@ public class Main {
 
 	//Global variables
 	public static int ID;
-	public static double M = 0;
-	public static double epsilon = 0;
+	public static double M = 1;
+	public static double epsilon = 0.5;
 	public static int Capacity;
 	public static double stabilityDiff = 0.02;
 	public static long bandwidth = 1000000000 / (8);
@@ -72,9 +72,54 @@ public class Main {
 	public static Object extraShadowPacketGeneratedLock = new Object();
 	public static Object dataPacketsDroppedLock = new Object();
 	public static Object dataPacketsSentLock = new Object();
-	public static Object lastSecondDataPacketsSentLock = new Object();
 
 
+	//Debug
+	public static boolean verbose = false;
+	public static boolean DEBUG = true;	
+	public static Object lastLock = new Object();
+	
+	public static int lastDataPacketsSent=0;
+	public static int lastDataPacketsSent2=0;
+	public static Object lastDataPacketsSentLock = new Object();
+	public static HashMap<Integer, Integer> lastDataSent = new HashMap<Integer, Integer>();
+	
+	public static int lastDataPacketsReceived=0;
+	public static Object lastDataPacketsReceivedLock=0;
+	public static HashMap<Integer, Integer> lastDataRecv = new HashMap<Integer, Integer>();
+	
+	public static int lastShadowPacketsSent=0;
+	public static Object lastShadowPacketsSentLock = new Object();
+	public static HashMap<Integer, Integer> lastShdwSent = new HashMap<Integer, Integer>();
+	
+	public static int lastShadowPacketsReceived=0;
+	public static Object lastShadowPacketsReceivedLock = new Object();
+	public static HashMap<Integer, Integer> lastShdwRecv = new HashMap<Integer, Integer>();
+	
+	public static int lastDataPacketsGenerated = 0;
+	public static Object lastDataPacketsGeneratedLock = new Object();
+	public static HashMap<Integer, Integer> lastDataGen = new HashMap<Integer, Integer>();
+	
+	public static int lastShadowPacketsGenerated = 0;
+	public static Object lastShadowPacketsGeneratedLock = new Object();
+	public static HashMap<Integer, Integer> lastShdwGen = new HashMap<Integer, Integer>();
+	
+	public static int lastDataPacketsConsumed = 0;
+	public static Object lastDataPacketsConsumedLock = new Object();
+	public static HashMap<Integer, Integer> lastDataConsumed = new HashMap<Integer, Integer>();
+	
+	public static int inputBufferSize = 0;
+	public static Object inputBufferSizeLock = new Object();
+	
+	public static HashMap<Integer, HashMap<Integer, Integer>> shdwSent =  new HashMap<Integer, HashMap<Integer, Integer>>();
+	public static HashMap<Integer, HashMap<Integer, Integer>> shdwRecv =  new HashMap<Integer, HashMap<Integer, Integer>>();
+	public static HashMap<Integer, HashMap<Integer, Integer>> toknSent =  new HashMap<Integer, HashMap<Integer, Integer>>();
+	public static HashMap<Integer, HashMap<Integer, Integer>> toknRecv =  new HashMap<Integer, HashMap<Integer, Integer>>();
+	public static HashMap<Integer, Integer> shdwDrop = new HashMap<Integer, Integer>();
+	public static Object shdwDropLock = new Object();
+	public static HashMap<Integer, Integer> shdwGen = new HashMap<Integer, Integer>();
+	public static Object shdwGenLock = new Object();
+	
 	//Shared and synchronized (lock protected) fields:
 	public static int nShadowQueueReceived = 0;
 	public static int nShadowQueuesSent=0;
@@ -100,11 +145,13 @@ public class Main {
 	public static Object dataPacketStatLock = new Object();
 	public static int dataPacketsSent=0;
 	public static int dataPacketsReceived=0;
+	public static Object dataPacketsReceivedLock = new Object();
+	public static int dataPacketsRouted=0;
 	public static int dataPacketSize=Configurations.PAYLOAD_SIZE + 450;
 	public static int dataPacketsDropped=0;
 	//Not being used 
 	public static int averageDataPacketSize=0;
-	public static int lastSecondDataPacketsSent=0;
+
 
 	//Measurements for control packets
 	public static int controlPacketsSent=0;
@@ -128,7 +175,7 @@ public class Main {
 			receivedShadowPacketLock = new Object();
 
 			if(!parseConfFile2(confFile)) return false;
-
+			
 			//Initializations
 			initNeighbors();			
 			Iterator<Integer> iterator = nodes.keySet().iterator();
@@ -141,13 +188,18 @@ public class Main {
 			System.out.println("No. of nodes: " + nodes.size());
 			System.out.println("No. of neighbors: " + neighbors.size());
 
+			resetStats();
+			
 			startConnectionWorkers();
 			generateFlows();
 
 			shadowPacketGenerator.start();
 			router.start();
 			commandPromt.start();
-		
+			
+			//Terminator terminator = new Terminator();
+			//terminator.start();
+
 		}catch(Throwable e){
 			e.printStackTrace();
 			System.out.println("MAIN: FATAL ERROR");
@@ -159,6 +211,70 @@ public class Main {
 		return true;
 	}
 
+	public static void resetStats(){
+		Main.toknRecv = new HashMap<Integer, HashMap<Integer,Integer>>();
+		Iterator<Integer> it = Main.nodes.keySet().iterator();
+		while(it.hasNext()){
+			int dest = it.next();
+			Iterator<Integer> it2 = Main.neighbors.keySet().iterator();
+			HashMap<Integer, Integer> temp = new HashMap<Integer, Integer>();
+			while(it2.hasNext()){
+				temp.put(it2.next(), 0);
+			}
+			Main.toknRecv.put(dest, temp);
+		}
+		
+		Main.toknSent = new HashMap<Integer, HashMap<Integer,Integer>>();
+		it = Main.nodes.keySet().iterator();
+		while(it.hasNext()){
+			int dest = it.next();
+			Iterator<Integer> it2 = Main.neighbors.keySet().iterator();
+			HashMap<Integer, Integer> temp = new HashMap<Integer, Integer>();
+			while(it2.hasNext()){
+				temp.put(it2.next(), 0);
+			}
+			Main.toknSent.put(dest, temp);
+		}
+		
+		Main.shdwRecv = new HashMap<Integer, HashMap<Integer,Integer>>();
+		it = Main.nodes.keySet().iterator();
+		while(it.hasNext()){
+			int dest = it.next();
+			Iterator<Integer> it2 = Main.neighbors.keySet().iterator();
+			HashMap<Integer, Integer> temp = new HashMap<Integer, Integer>();
+			while(it2.hasNext()){
+				temp.put(it2.next(), 0);
+			}
+			Main.shdwRecv.put(dest, temp);
+		}
+		
+		Main.shdwSent = new HashMap<Integer, HashMap<Integer,Integer>>();
+		it = Main.nodes.keySet().iterator();
+		while(it.hasNext()){
+			int dest = it.next();
+			Iterator<Integer> it2 = Main.neighbors.keySet().iterator();
+			HashMap<Integer, Integer> temp = new HashMap<Integer, Integer>();
+			while(it2.hasNext()){
+				temp.put(it2.next(), 0);
+			}
+			Main.shdwSent.put(dest, temp);
+		}
+		
+		shdwGen = new HashMap<Integer, Integer>();
+		it = Main.nodes.keySet().iterator();
+		while(it.hasNext()){
+			int dest = it.next();
+			Main.shdwGen.put(dest, 0);
+		}
+		
+		shdwDrop = new HashMap<Integer, Integer>();
+		it = Main.nodes.keySet().iterator();
+		while(it.hasNext()){
+			int dest = it.next();
+			Main.shdwDrop.put(dest, 0);
+		}
+	}
+	
 	public static InetAddress getAddress(String ip) throws UnknownHostException{
 		String[] addrStr = ip.split("\\.");
 		//System.out.println(addrStr.length + " " + parts[1]);
@@ -283,7 +399,9 @@ public class Main {
 	public static void notifyShadowQueueArrival(){
 		synchronized(receivedShadowQueueLock){
 			nShadowQueueReceived++;
-			System.out.println("CONTROL: Received " + nShadowQueueReceived + " shadow-queues for iteration " + Main.iteration);
+			if(Main.verbose){
+				System.out.println("CONTROL: Received " + nShadowQueueReceived + " shadow-queues for iteration " + Main.iteration);
+			}
 			if(nShadowQueueReceived == Main.neighbors.size()){
 
 				receivedShadowQueueLock.notifyAll();
@@ -295,7 +413,9 @@ public class Main {
 	public static void notifyShadowPacketArrival(){
 		synchronized(receivedShadowPacketLock){
 			nShadowPacketReceived++;
-			System.out.println("CONTROL: Received " + nShadowPacketReceived + " shadow-packets for iteration " + Main.iteration);
+			if(Main.verbose){
+				System.out.println("CONTROL: Received " + nShadowPacketReceived + " shadow-packets for iteration " + Main.iteration);
+			}
 			if(nShadowPacketReceived == Main.neighbors.size()){			
 				receivedShadowPacketLock.notifyAll();
 			}
@@ -340,14 +460,16 @@ public class Main {
 		return Main.shadowQueues;
 	}
 
-	public static void updateShadowQueue(ControlPacket packet){
+	public static void updateShadowQueue(ControlPacket packet, int link){
 		if(packet.type!=Configurations.SHADOW_PACKET_TYPE){
 			System.out.println("ERROR: updateShadowQueue: wrong packet " + packet);
 			return;
 		}
 
 		if(packet.shadowPackets.size() > 1){
-			System.out.println("CONTROL: INFO: Proportional splitting is ON");
+			if(Main.verbose){
+				System.out.println("CONTROL: INFO: Proportional splitting is ON");
+			}
 		}
 
 		synchronized(shadowQueueLock){
@@ -355,7 +477,21 @@ public class Main {
 			while(iterator.hasNext()){
 				int destination = iterator.next();
 				int nPackets = packet.shadowPackets.get(destination);				
-				Main.shadowPacketsReceived += nPackets;				
+				Main.shadowPacketsReceived += nPackets;
+				
+				synchronized(Main.lastLock){
+					HashMap<Integer, Integer> temp = Main.shdwRecv.get(destination);
+					temp.put(link, temp.get(link) + nPackets);
+					Main.shdwRecv.put(destination, temp);
+				}
+				
+				if(Main.DEBUG){
+					synchronized(Main.lastLock){
+						synchronized(Main.lastShadowPacketsReceivedLock){
+							Main.lastShadowPacketsReceived += nPackets;
+						}
+					}
+				}
 				//System.out.println("DEBUG: " + Main.nShadowQueueReceived);
 				if(destination==Main.ID){
 					continue;
@@ -377,6 +513,12 @@ public class Main {
 				shadowQueues.get(destination).update(-1);
 			}	
 		}
+		synchronized(Main.lastLock){
+			synchronized(Main.shdwDropLock){
+				Main.shdwDrop.put(destination, Main.shdwDrop.get(destination) + 1);
+			}
+		}
+		
 	}
 
 	//Just used by flow generators to add shadow packets to shadow queues
@@ -389,14 +531,17 @@ public class Main {
 		synchronized(shadowQueueLock){
 			if(shadowQueues.containsKey(destination)){
 				shadowQueues.get(destination).update(nShadowPackets);
-				//				if(nShadowPackets==2){
-				//					Main.extraShadowPacketsGenerated++;
-				//				}
+				
 				Main.shadowPacketsGenerated += nShadowPackets;
 
 			}
 		}
-
+		
+		synchronized(Main.lastLock){
+			synchronized(Main.shdwGenLock){
+				Main.shdwGen.put(destination, Main.shdwGen.get(destination) + nShadowPackets);
+			}
+		}
 	}
 
 	public static void startConnectionWorkers(){

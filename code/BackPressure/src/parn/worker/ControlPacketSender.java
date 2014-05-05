@@ -46,12 +46,16 @@ public class ControlPacketSender extends Thread{
 					}
 				}
 
-				System.out.println("CONTROL: " + this + " Starting " + Main.iteration + ", " + Main.iterationPhase);
+				if(Main.verbose) {
+					System.out.println("CONTROL: " + this + " Starting " + Main.iteration + ", " + Main.iterationPhase);
+				}
 
 
 				ControlPacket packet = new ControlPacket(Main.ID, neighbor.node.id, Configurations.SHADOW_QUEUE_TYPE, Main.iteration, Main.iterationPhase);
 				try {
-					System.out.println("CONTROL: " + this + " sending " + packet);
+					if(Main.verbose) {
+						System.out.println("CONTROL: " + this + " sending " + packet);
+					}
 					connection.writeObject(packet);
 					Main.updateControlSenderStats(packet);
 				} catch (IOException e) {
@@ -63,9 +67,13 @@ public class ControlPacketSender extends Thread{
 
 				synchronized(Main.sentShadowQueueLock){
 					Main.nShadowQueuesSent++;
-					System.out.println("CONTROL: " + this + " nShadowQueuesSent: " + Main.nShadowQueuesSent + ", NeighborSize: " + Main.neighbors.size());
+					if(Main.verbose) {
+						System.out.println("CONTROL: " + this + " nShadowQueuesSent: " + Main.nShadowQueuesSent + ", NeighborSize: " + Main.neighbors.size());
+					}
 					if(Main.nShadowQueuesSent == Main.neighbors.size()){
-						System.out.println("CONTROL: " + this + " The Last ControlPacketSender");
+						if(Main.verbose) {
+							System.out.println("CONTROL: " + this + " The Last ControlPacketSender");
+						}
 						Main.nShadowQueuesSent=0;
 
 						synchronized(Main.receivedShadowQueueLock){

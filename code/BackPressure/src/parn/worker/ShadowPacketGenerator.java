@@ -57,11 +57,15 @@ public class ShadowPacketGenerator extends Thread {
 
 				iteration++;
 				Main.iteration++;
-				System.out.println("CONTROL: " + this + " Starting iteration " + Main.iteration + "," + Main.iterationPhase + "       time:  " + (System.currentTimeMillis() - Main.startTime));
+				if(Main.verbose){
+					System.out.println("CONTROL: " + this + " Starting iteration " + Main.iteration + "," + Main.iterationPhase + "       time:  " + (System.currentTimeMillis() - Main.startTime));
+				}
 
 				String printStr="";
 				Iterator<Integer> iterator = Main.neighbors.keySet().iterator();
 				long thisTime = System.currentTimeMillis();
+				
+				
 				while(iterator.hasNext()){
 					Neighbor neighbor = Main.neighbors.get(iterator.next());
 					Iterator<Integer> destinations = neighbor.shadowQueues.keySet().iterator();
@@ -74,9 +78,14 @@ public class ShadowPacketGenerator extends Thread {
 						//System.out.print( " " + Main.shadowQueues.get(dest).length + "-" + neighbor.shadowQueues.get(dest).length + "-" + Main.M);
 						//int MLocal = (int) (Main.M*Router.packetRate3 / Main.neighbors.size());
 						int MLocal = (int) (Main.M * Configurations.PACKET_RATE );
-						System.out.println("CONTROL: MLocal: " + MLocal + " packetRate: " + Router.packetRate3);
+						//System.out.println("CONTROL: MLocal: " + MLocal + " packetRate: " + Router.packetRate3);
 						int weight = Main.shadowQueues.get(dest).length - neighbor.shadowQueues.get(dest).length - MLocal;
-						if(( weight > 0 && dest == neighbor.node.id) || (!(Main.neighbors.containsKey(dest)) && weight > 0)){
+						/*if(( weight > 0 && dest == neighbor.node.id) || (!(Main.neighbors.containsKey(dest)) && weight > 0)){
+							weighs.add(new ShadowPacket(dest, weight));
+
+						}*/
+						
+						if(weight > 0 ){
 							weighs.add(new ShadowPacket(dest, weight));
 
 						}
@@ -89,6 +98,7 @@ public class ShadowPacketGenerator extends Thread {
 
 					//String printStr="";
 					HashMap<Integer, Integer> shadowPackets = new HashMap<Integer, Integer>();
+					int totalPackets=0;
 
 					//prop. splitting
 					if(Main.usePropSplitting==1){
@@ -99,7 +109,9 @@ public class ShadowPacketGenerator extends Thread {
 								maxRate = Router.packetRate4;
 								
 							}
-							System.out.println("PLEASE: " + Router.packetRate4 + " maxRate: " + maxRate);
+							if(Main.verbose){
+								System.out.println("PLEASE: " + Router.packetRate4 + " maxRate: " + maxRate);
+							}
 							double part1 = Main.shadowPaketRateFactor * 1.0*maxRate / (1.0*Main.neighbors.size());
 							double part2 = 1.0*(thisTime - time) / 1000.0;
 							shadowPacketsLimit = (long) (part1 * part2);
@@ -125,8 +137,19 @@ public class ShadowPacketGenerator extends Thread {
 								idealShadowPacketDist.put(dest, idealSP);
 								int actualSP = Main.shadowQueues.get(dest).update(-1*idealSP);
 								shadowPackets.put(dest, actualSP);
-								Main.shadowPacketsSent += actualSP;
 
+								synchronized(Main.lastLock){
+									//System.out.println("This should not be null: " + Main.shdwSent.get(dest));
+									//System.out.println("Neighbor: " + neighbor.node.id);
+									HashMap<Integer, Integer> temp = Main.shdwSent.get(dest);
+									temp.put(neighbor.node.id, temp.get(neighbor.node.id) + actualSP);
+									//System.out.println(temp);
+									Main.shdwSent.put(dest, temp);
+									//System.out.println("Updated ShadowSent Stats");
+								}
+								
+								Main.shadowPacketsSent += actualSP;
+								totalPackets += actualSP;
 								Node node = Main.nodes.get(dest);
 								node.updateTokenBucket(neighbor.node.id, -1*actualSP);
 
@@ -138,7 +161,7 @@ public class ShadowPacketGenerator extends Thread {
 							printStr += "CONTROL: " + this + " No shadow packets for " + neighbor;
 						}
 					}else{
-						if(maxWeight>0){
+						/*if(maxWeight>0){
 							int nShadowPackets=1;
 
 							if(Configurations.DEBUG_ON){
@@ -173,14 +196,21 @@ public class ShadowPacketGenerator extends Thread {
 						}else{
 
 							printStr += "CONTROL: " + this + " No shadow packets for " + neighbor;
-						}
+						}*/
 
+					}
+					if(Main.DEBUG){
+						synchronized(Main.lastLock){
+							Main.lastShadowPacketsSent += totalPackets;
+						}
 					}
 					printStr += " QueueLength: " + neighbor.realQueue.size();
 					neighbor.sendShadowPackets(shadowPackets, iteration);
 				}
 
-				System.out.println(printStr);
+				if(Main.verbose){
+					System.out.println(printStr);
+				}
 
 
 				//Reset neighbors SQ
@@ -188,7 +218,9 @@ public class ShadowPacketGenerator extends Thread {
 				while(iterator2.hasNext()){
 					iterator2.next().reset();
 				}
-				System.out.println("CONTROL: " + this + " iteration ended");
+				if(Main.verbose){
+					System.out.println("CONTROL: " + this + " iteration ended");
+				}
 
 
 				/*synchronized(Main.receivedShadowPacketLock){
@@ -200,18 +232,26 @@ public class ShadowPacketGenerator extends Thread {
 				//TODO: Take the stability check module to somewhere else ?
 				if(checkStability()){
 					if(!Configurations.isStable){
-						System.out.println("STAT: CONTROL: System is stable");
+						if(Main.verbose){
+							System.out.println("STAT: System is stable");
+						}
 						Configurations.isStable = true;
 						Configurations.stableIterations = iteration;
 						Configurations.stableTime = System.currentTimeMillis() - Configurations.startTime;
 					}else{
-						System.out.println("STAT: System remains stable");
+						if(Main.verbose){
+							System.out.println("STAT: System remains stable");
+						}
 					}
 				}else{
 					if(!Configurations.isStable){
-						System.out.println("STAT: System is NOT stable yet");
+						if(Main.verbose){
+							System.out.println("STAT: System is NOT stable yet");
+						}
 					}else{
-						System.out.println("STAT: ERROR: System went from stable to unstable");
+						if(Main.verbose){
+							System.out.println("STAT: ERROR: System went from stable to unstable");
+						}
 						Main.error = true;
 					}
 				}
@@ -226,7 +266,9 @@ public class ShadowPacketGenerator extends Thread {
 							e.printStackTrace();
 						}
 					}
-					System.out.println("CONTROL: " + this + " Received all Shadow Packets");
+					if(Main.verbose){
+						System.out.println("CONTROL: " + this + " Received all Shadow Packets");
+					}
 					Main.nShadowPacketReceived=0;
 
 					synchronized(Main.iterationPhaseLock){
@@ -242,7 +284,8 @@ public class ShadowPacketGenerator extends Thread {
 			}
 		}catch(Throwable e){
 			e.printStackTrace();
-			System.out.println(this + " FATAL ERROR " + e.getMessage());
+			
+			System.out.println(this + " FATAL ERROR " + e.getMessage() + " " + e.getLocalizedMessage() + " " + e.toString() + e.getStackTrace().toString());
 			Configurations.FATAL_ERROR = true;
 		}
 

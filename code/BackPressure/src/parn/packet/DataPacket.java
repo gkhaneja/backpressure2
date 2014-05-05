@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 
 import parn.main.Configurations;
+import parn.main.Main;
 
 public class DataPacket implements Serializable {
 	/**
@@ -40,7 +41,6 @@ public class DataPacket implements Serializable {
 		this.sequenceNumber = sequenceNumber;
 		path = new ArrayList<Character>();
 		time = System.currentTimeMillis();
-		//TODO: I think arrays are initialized by default. Confirm this by measuring size.
 		payload = new byte[Configurations.PAYLOAD_SIZE];
 	}
 
@@ -77,7 +77,9 @@ public class DataPacket implements Serializable {
 	
 	public boolean checkValidity(){
 		if(ttl<0) {
-			System.out.println(this + " is being dropped");
+			if(Main.DEBUG){
+				System.out.println(this + " is being dropped");
+			}
 			return false;
 		}
 		ttl--;

@@ -23,23 +23,31 @@ public class DataPacketSender extends Thread {
 			while(!Configurations.SYSTEM_HALT){
 				//System.out.println(this + " is running");
 				if(Configurations.DEBUG_ON){
-						System.out.println("DATA: " + this + " Sleeping");
-						sleep(Configurations.SLOW_DOWN_FACTOR);
-					
+					System.out.println("DATA: " + this + " Sleeping");
+					sleep(Configurations.SLOW_DOWN_FACTOR);
+
 				}
 
 				DataPacket packet = neighbor.realQueue.poll();
 				if(packet==null) continue;
-				
-					//System.out.println("DATA: " + this + " sending " + packet);
-					connection.writeObject(packet);
-				 
+
+				if(Main.verbose) {
+					System.out.println("DATA: " + this + " sending " + packet);
+				}
+				connection.writeObject(packet);
+
 
 				synchronized(Main.dataPacketsSentLock){
 					Main.dataPacketsSent++;
 				}
-				synchronized(Main.lastSecondDataPacketsSentLock){
-					Main.lastSecondDataPacketsSent++;
+				
+				if(Main.DEBUG){
+					synchronized(Main.lastLock){
+						synchronized(Main.lastDataPacketsSentLock){
+							Main.lastDataPacketsSent++;
+							Main.lastDataPacketsSent2++;
+						}
+					}
 				}
 			}
 		}catch(Throwable e){
@@ -47,7 +55,7 @@ public class DataPacketSender extends Thread {
 			System.out.println(this + " FATAL ERROR " + e.getMessage());
 			Configurations.FATAL_ERROR = true;
 		}
-		
+
 	}
 
 	public String toString(){
