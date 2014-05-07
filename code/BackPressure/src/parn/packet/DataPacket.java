@@ -77,7 +77,7 @@ public class DataPacket implements Serializable {
 	
 	public boolean checkValidity(){
 		if(ttl<0) {
-			if(Main.DEBUG){
+			if(Main.verbose){
 				System.out.println(this + " is being dropped");
 			}
 			return false;

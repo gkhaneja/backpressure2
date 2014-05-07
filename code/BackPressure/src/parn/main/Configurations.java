@@ -16,8 +16,8 @@ public class Configurations {
 	
 	public static final int PAYLOAD_SIZE=1000;
 	public static long CONTROL_INTERVAL=1000;
-	public static final int PACKET_RATE=500;
-	public static final int DURATION=180000;
+	public static final int PACKET_RATE=30;
+	public static final int DURATION=60000;
 	
 	//Switches
 	//public static final boolean TURN_OFF_DATA_CHANNELS = true;
@@ -26,6 +26,7 @@ public class Configurations {
 	public static final int SLOW_DOWN_FACTOR = 5000;
 	public static boolean SYSTEM_HALT = false;
 	public static boolean FATAL_ERROR=false;
+	
 	
 	
 	//Measurements

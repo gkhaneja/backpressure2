@@ -102,6 +102,8 @@ public class Neighbor extends Thread {
 				System.out.println("CONTROL: sending " + packet);
 			}
 			control.out.writeObject(packet);
+			
+			Main.updateControlSenderStats(packet);
 		} catch (IOException e) {
 			System.out.println(this + ": Error sending " + packet);
 			//TODO: comment stack trace, may be

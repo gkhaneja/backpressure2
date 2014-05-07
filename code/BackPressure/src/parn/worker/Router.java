@@ -114,13 +114,11 @@ public static String getAllTokenBucketStats(){
 				
 				
 				long time = System.currentTimeMillis() - Main.startTime;
-				
 				//Printing Block : executes after every 1 second
 				if(time - lastTime > 1000){
-					
-					if(Main.DEBUG){
-						String str="";					
-						synchronized(Main.lastLock){
+					synchronized(Main.lastLock){
+						if(Main.DEBUG){
+							String str="";
 							str += "INFO: " + time + " / " + Main.duration + "\n";
 							str += "[" + Main.iteration + "]DataPacketsGenerated: " + Main.lastDataPacketsGenerated + ", DataPacketsReceived: " + Main.lastDataPacketsReceived + ", DataPacketsSent: " + Main.lastDataPacketsSent + ", DataPacketsConsumed: " + Main.lastDataPacketsConsumed + "\n";
 							str += "[" + Main.iteration + "]ShdwPacketsGenerated: " + Main.lastShadowPacketsGenerated + ", ShdwPacketsReceived: " + Main.lastShadowPacketsReceived + ", ShdwPacketsSent: " + Main.lastShadowPacketsSent + "\n";
@@ -132,15 +130,22 @@ public static String getAllTokenBucketStats(){
 							str += getAllShdwPacketStats() + "\n";
 							str += getAllTokenBucketStats() + "\n";
 							System.out.println(str + "\n\n\n");
-							Main.lastDataPacketsConsumed = Main.lastDataPacketsGenerated = Main.lastDataPacketsReceived = Main.lastDataPacketsSent = 0;
-							Main.lastShadowPacketsGenerated = Main.lastShadowPacketsReceived = Main.lastShadowPacketsSent = 0;
-							Main.resetStats();
-							lastTime = time;
+
+
+						}else{
+							String str="";	
+							str += "INFO: " + time + " / " + Main.duration + "\n";
+							System.out.println(str + "\n\n");
 						}
+						Main.lastDataPacketsConsumed = Main.lastDataPacketsGenerated = Main.lastDataPacketsReceived = Main.lastDataPacketsSent = 0;
+						Main.lastShadowPacketsGenerated = Main.lastShadowPacketsReceived = Main.lastShadowPacketsSent = 0;
+						Main.resetStats();
+						lastTime = time;
 					}
-					
-					
 				}
+
+
+
 				
 				
 				
@@ -173,8 +178,12 @@ public static String getAllTokenBucketStats(){
 					//System.out.println("INFO: Stopping the system");
 					CommandPromt.printStats();
 					System.exit(0);
-					continue;
+					
 				}
+				
+				
+				
+				
 
 				/*if(Configurations.DEBUG_ON){
 				try{

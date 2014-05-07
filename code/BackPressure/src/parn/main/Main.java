@@ -37,20 +37,23 @@ public class Main {
 	//Global variables
 	public static int ID;
 	public static double M = 1;
-	public static double epsilon = 0.5;
+	public static double epsilon = 0;
 	public static int Capacity;
-	public static double stabilityDiff = 0.02;
+	public static double stabilityDiff = 0.05;
+	public static double itThreshold = 20;
 	public static long bandwidth = 1000000000 / (8);
 	public static int usePropSplitting = 1;
-	public static int initializeShadowQueues = 0;
+	public static int useNeighborOp = 1;
+	public static int initializeShadowQueues = 1;
 	public static long duration = Configurations.DURATION;
 	public static long startTime = System.currentTimeMillis();
 	public static boolean error = false;
 	public static int iteration=0;
-	public static int TOP_K=1;
+	public static int TOP_K=2;
 	public static double shadowPaketRateFactor=1.0;
 	//phase: 0-sending/receiving to shadow packets (shadowPacketGenerator is active) , 1-sending/receiving to shadow queues (controlPacketSenders are active)
 	public static int iterationPhase=1;
+	public static int stableCounter=0;
 
 
 
@@ -294,22 +297,26 @@ public class Main {
 			//first line contains M, epsilon, prop, pathlength, time
 			line = reader.readLine();
 			parts = line.split("\t");
-			//Main.M = Integer.parseInt(parts[0]);
-			//Main.epsilon = Double.parseDouble(parts[1]);
-			//Main.usePropSplitting = Integer.parseInt(parts[2]);
-			//Main.initializeShadowQueues = Integer.parseInt(parts[3]);
+			Main.M = Integer.parseInt(parts[0]);
+			Main.epsilon = Double.parseDouble(parts[1]);
+			Main.TOP_K = Integer.parseInt(parts[2]);
+			Main.useNeighborOp = Integer.parseInt(parts[3]);
+			Main.initializeShadowQueues = Integer.parseInt(parts[3]);
 			//Main.duration = Long.parseLong(parts[4]);
 			//Configurations.CONTROL_INTERVAL = Long.parseLong(parts[5]);
+			System.out.println("Params Formatted Correctly");
 
 			line = reader.readLine();
 			parts = line.split("\t");
 			Main.ID = Integer.parseInt(parts[1]);
-
+			
+			
 			line = reader.readLine();
 			parts = line.split("\t");			
 			nodes.put(Main.ID, new Node(Main.ID, Main.getAddress(parts[1])));
 			shadowQueues.put(Main.ID, new ShadowQueue(Main.ID, 0));
-
+			System.out.println("ID Formatted Correctly");
+			
 			line = reader.readLine();
 			parts = line.split("\t");			
 			int nNeighbors = Integer.parseInt(parts[1]);			
@@ -318,7 +325,8 @@ public class Main {
 				parts = line.split("\t");
 				neighbors.put(Integer.parseInt(parts[0]), new Neighbor(Integer.parseInt(parts[2])));
 			}
-
+			System.out.println("Neighbors Formatted Correctly");
+			
 			line = reader.readLine();
 			parts = line.split("\t");			
 			int nNodes = Integer.parseInt(parts[1]);			
@@ -326,14 +334,15 @@ public class Main {
 				line = reader.readLine();
 				parts = line.split("\t");			
 				int nodeId = Integer.parseInt(parts[0]);
-				nodes.put(nodeId, new Node(Integer.parseInt(parts[0]), Main.getAddress(parts[1]), Integer.parseInt(parts[2])));
+				nodes.put(nodeId, new Node(Integer.parseInt(parts[0]), Main.getAddress(parts[1]), Configurations.PACKET_RATE*Integer.parseInt(parts[2])));
 				if(initializeShadowQueues==1){
-					System.out.println("CONTROL: Initializing shadow queue " + nodeId + " with " + Integer.parseInt(parts[2]));
+					System.out.println("CONTROL: Initializing shadow queue " + nodeId + " with " + Configurations.PACKET_RATE*Integer.parseInt(parts[2]));
 					shadowQueues.put(nodeId, new ShadowQueue(nodeId, Integer.parseInt(parts[2])));
 				}else{
 					shadowQueues.put(nodeId, new ShadowQueue(nodeId, 0));
 				}
 			}
+			System.out.println("nodes Formatted Correctly");
 
 			line = reader.readLine();
 			parts = line.split("\t");			
@@ -343,7 +352,7 @@ public class Main {
 				parts = line.split("\t");				
 				flows.put(Integer.parseInt(parts[0]), new Flow(Integer.parseInt(parts[0]), Main.ID, Integer.parseInt(parts[1]), Configurations.PACKET_RATE));
 			}
-
+			System.out.println("flows Formatted Correctly");
 
 			reader.close();
 		}catch(FileNotFoundException e){

@@ -80,16 +80,18 @@ public class ShadowPacketGenerator extends Thread {
 						int MLocal = (int) (Main.M * Configurations.PACKET_RATE );
 						//System.out.println("CONTROL: MLocal: " + MLocal + " packetRate: " + Router.packetRate3);
 						int weight = Main.shadowQueues.get(dest).length - neighbor.shadowQueues.get(dest).length - MLocal;
-						/*if(( weight > 0 && dest == neighbor.node.id) || (!(Main.neighbors.containsKey(dest)) && weight > 0)){
-							weighs.add(new ShadowPacket(dest, weight));
-
-						}*/
 						
-						if(weight > 0 ){
-							weighs.add(new ShadowPacket(dest, weight));
+						if(Main.useNeighborOp==1){
+							if(( weight > 0 && dest == neighbor.node.id) || (!(Main.neighbors.containsKey(dest)) && weight > 0)){
+								weighs.add(new ShadowPacket(dest, weight));
 
+							}
+						}else{
+							if(weight > 0 ){
+								weighs.add(new ShadowPacket(dest, weight));
+
+							}
 						}
-						
 						if((weight > maxWeight) || (weight == maxWeight && rand.nextBoolean())){
 							winnerDest = dest;
 							maxWeight  = weight;
@@ -230,7 +232,14 @@ public class ShadowPacketGenerator extends Thread {
 
 				//Stability Check
 				//TODO: Take the stability check module to somewhere else ?
-				if(checkStability()){
+				boolean stableRet = checkStability();
+				if(stableRet){
+					Main.stableCounter++;
+				}else{
+					Main.stableCounter=0;
+				}
+				if(Main.stableCounter >= 4){
+					stableRet=true;
 					if(!Configurations.isStable){
 						if(Main.verbose){
 							System.out.println("STAT: System is stable");
@@ -244,6 +253,7 @@ public class ShadowPacketGenerator extends Thread {
 						}
 					}
 				}else{
+					stableRet=false;
 					if(!Configurations.isStable){
 						if(Main.verbose){
 							System.out.println("STAT: System is NOT stable yet");
@@ -255,7 +265,10 @@ public class ShadowPacketGenerator extends Thread {
 						Main.error = true;
 					}
 				}
-
+				if(Main.DEBUG){
+					//System.out.println("PROB: " + stableRet);
+					//System.out.println("PROB: ");
+				}
 				time = System.currentTimeMillis();
 
 				synchronized(Main.receivedShadowPacketLock){

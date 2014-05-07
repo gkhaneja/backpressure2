@@ -4,6 +4,7 @@ import java.util.Iterator;
 import java.util.Scanner;
 
 import parn.main.Configurations;
+import parn.main.FlowStat;
 import parn.main.Main;
 
 public class CommandPromt extends Thread {
@@ -27,13 +28,19 @@ public class CommandPromt extends Thread {
 
 	public  static void printStats(){
 		try{
-			System.out.println("STAT: time: " + (System.currentTimeMillis() - Main.startTime));
+			
+			long stopTime = System.currentTimeMillis();
+			double duration = (stopTime - Main.startTime) / 1000.0;
+			System.out.println("STAT: Total time: " + (stopTime - Main.startTime));
 			System.out.println("STAT: The system encountered an error. " + Main.error);
 			System.out.println("STAT: No. of iterations: " + Main.iteration );
 			System.out.println("STAT: Stable iteration: " + Configurations.stableIterations);
 			System.out.println("STAT: Stable time: " + Configurations.stableTime);
 			System.out.println("STAT:");
 
+			
+			
+			
 			System.out.println("STAT: shadow packets generated: " + Main.shadowPacketsGenerated);
 			System.out.println("STAT: Extra shadow packets generated:  " + Main.extraShadowPacketsGenerated);
 			System.out.println("STAT: shadow packets sent:  " + Main.shadowPacketsSent);
@@ -58,12 +65,42 @@ public class CommandPromt extends Thread {
 				System.out.print("STAT: "); Main.nodes.get(iterator2.next()).printProbs();
 			}
 			System.out.println();
+			
+			long bytesConsumed=0;
+			double avgPathLength=0;
+			long count=0;
+			int maxPathLength=0;
+			
 			Iterator<Integer> iterator = Main.flowStatReceived.keySet().iterator();
 			while(iterator.hasNext()){
 				//System.out.println("flow stats");
-				System.out.println(Main.flowStatReceived.get(iterator.next()));
+				int flowId = iterator.next();
+				FlowStat flowStat = Main.flowStatReceived.get(flowId);
+				bytesConsumed += flowStat.nBytes;
+				avgPathLength += flowStat.nPackets*flowStat.pathLength;
+				count += flowStat.nPackets;
+				if(flowStat.maxPathLength > maxPathLength){
+					maxPathLength = flowStat.maxPathLength;
+				}
+				System.out.println(flowStat);
 
 			}
+			System.out.println();
+						
+			avgPathLength = avgPathLength / count;
+			double goodput = bytesConsumed / duration;
+			
+			double controlOverheadBytes = (Main.controlBytesReceived + Main.controlBytesSent) / (2 * Main.neighbors.size() * duration);
+			double controlOverheadPackets = (Main.controlPacketsReceived+ Main.controlPacketsSent) / (2 * Main.neighbors.size() * duration);
+			double throughput = (Main.dataPacketsReceived + Main.dataPacketsSent)*Main.dataPacketSize / (2 * Main.neighbors.size() * duration);
+			
+			System.out.println("STAT: generation (bytes / second)      : " + Configurations.PACKET_RATE*Main.dataPacketSize*Main.flows.size());
+			System.out.println("STAT: goodput (bytes / second)         : " + goodput);
+			System.out.println("STAT: throughput (bytes / second)      : " + throughput);
+			System.out.println("STAT: control overhead (bytes / second): " + controlOverheadBytes);
+			System.out.println("STAT: control overhead (pckts / second): " + controlOverheadPackets);
+			System.out.println("STAT: Total avgPathLength:                   : " + avgPathLength);
+			System.out.println("STAT: Total maxPathLength:                   : " + maxPathLength);
 		
 		}catch(Throwable e){
 			e.printStackTrace();

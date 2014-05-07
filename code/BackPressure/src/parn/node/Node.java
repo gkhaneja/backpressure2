@@ -84,17 +84,19 @@ public class Node {
 			probs.put(neighbor, newProb);
 			//System.out.println("old - " + oldProb + ". new - " + newProb);
 		}
-		//printProbs();
+		if(Main.DEBUG){
+			//printProbs();
+		}
 		return checkStability();
 	}
 
 	public void printProbs(){
-		String ret = Configurations.hashToString(probs);
+		String ret = "PROB: " + Configurations.hashToString(probs) + " npackets: " + Configurations.hashToString(packetsPerLink) + " total: " + packetsTotal;
 		System.out.println(this + ": " + ret);
 	}
 
 	public boolean checkStability(){
-		if(packetsTotal==0 && id!=Main.ID){
+		if(packetsTotal==0 && id!=Main.ID || Main.iteration < Main.itThreshold){
 			return false;
 		}
 		Iterator<Integer> iterator = packetsPerLink.keySet().iterator();
@@ -123,11 +125,14 @@ public class Node {
 				first=0;
 			}
 		}
-		//This node is also the neighbor
-		/*if(Main.neighbors.containsKey(id)){
-			smallestTokenBucket = id;
-			smallestTokenBucketValue = tokenBuckets.get(id);
-		}*/
+		
+		if(Main.useNeighborOp==1){
+			//This node is also the neighbor
+			if(Main.neighbors.containsKey(id)){
+				smallestTokenBucket = id;
+				smallestTokenBucketValue = tokenBuckets.get(id);
+			}
+		}
 		packetsPerLink.put(smallestTokenBucket, packetsPerLink.get(smallestTokenBucket) + 1);
 		packetsTotal++;
 
