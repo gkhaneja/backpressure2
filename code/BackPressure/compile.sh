@@ -1,4 +1,4 @@
-cp -r ~/Documents/workspace/BackPressure/src/parn/ ~/Documents/backpressure2/trunk/code/BackPressure/src/parn/
-cp -r ~/Documents/workspace/BackPressure/bp.conf ~/Documents/backpressure2/trunk/code/BackPressure/bp.conf
+cp -r ~/Documents/workspace/BackPressureProd/src/parn/ ~/Documents/prod/backpressure2/trunk/code/BackPressure/src/parn/
+#cp -r ~/Documents/workspace/BackPressureProd/bp.conf ~/Documents/prod/backpressure2/trunk/code/BackPressure/bp.conf
 find src -name "*.java" > sources.txt
 javac -d bin/ @sources.txt

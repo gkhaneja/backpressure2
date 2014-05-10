@@ -32,7 +32,8 @@ public class Main {
 	public static HashMap<Integer, Neighbor> neighbors;
 	public static LinkedBlockingQueue<DataPacket> inputBuffer;
 	public static HashMap<Integer, ShadowQueue> shadowQueues;
-
+	public static HashMap<Integer, Integer> lengths = new HashMap<Integer, Integer>();
+	
 
 	//Global variables
 	public static int ID;
@@ -315,6 +316,7 @@ public class Main {
 			parts = line.split("\t");			
 			nodes.put(Main.ID, new Node(Main.ID, Main.getAddress(parts[1])));
 			shadowQueues.put(Main.ID, new ShadowQueue(Main.ID, 0));
+			lengths.put(Main.ID,  0);
 			System.out.println("ID Formatted Correctly");
 			
 			line = reader.readLine();
@@ -341,6 +343,7 @@ public class Main {
 				}else{
 					shadowQueues.put(nodeId, new ShadowQueue(nodeId, 0));
 				}
+				lengths.put(nodeId, Integer.parseInt(parts[2]));
 			}
 			System.out.println("nodes Formatted Correctly");
 

@@ -68,6 +68,7 @@ public class CommandPromt extends Thread {
 			
 			long bytesConsumed=0;
 			double avgPathLength=0;
+			double avgPathExpantion=0;
 			long count=0;
 			int maxPathLength=0;
 			
@@ -78,6 +79,7 @@ public class CommandPromt extends Thread {
 				FlowStat flowStat = Main.flowStatReceived.get(flowId);
 				bytesConsumed += flowStat.nBytes;
 				avgPathLength += flowStat.nPackets*flowStat.pathLength;
+				avgPathExpantion += flowStat.nPackets*flowStat.pathExpansion;
 				count += flowStat.nPackets;
 				if(flowStat.maxPathLength > maxPathLength){
 					maxPathLength = flowStat.maxPathLength;
@@ -88,6 +90,7 @@ public class CommandPromt extends Thread {
 			System.out.println();
 						
 			avgPathLength = avgPathLength / count;
+			avgPathExpantion = avgPathExpantion / count;
 			double goodput = bytesConsumed / duration;
 			
 			double controlOverheadBytes = (Main.controlBytesReceived + Main.controlBytesSent) / (2 * Main.neighbors.size() * duration);
@@ -100,6 +103,7 @@ public class CommandPromt extends Thread {
 			System.out.println("STAT: control overhead (bytes / second): " + controlOverheadBytes);
 			System.out.println("STAT: control overhead (pckts / second): " + controlOverheadPackets);
 			System.out.println("STAT: Total avgPathLength:                   : " + avgPathLength);
+			System.out.println("STAT: Total avgPathExpansion:                : " + avgPathExpantion);
 			System.out.println("STAT: Total maxPathLength:                   : " + maxPathLength);
 		
 		}catch(Throwable e){

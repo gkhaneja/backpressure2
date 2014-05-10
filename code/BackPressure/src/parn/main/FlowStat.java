@@ -19,6 +19,7 @@ public class FlowStat {
 	//averages
 	public double pathLength;
 	public long travelTime;
+	public double pathExpansion;
 	
 	public int maxPathLength;
 	public long maxTravelTime;
@@ -33,6 +34,7 @@ public class FlowStat {
 			this.nPayloadBytes = packet.payload.length;
 			this.pathLength = packet.path.size() - 1;
 			this.maxPathLength = packet.path.size() - 1;
+			this.pathExpansion = (packet.path.size() - 1) / Main.lengths.get(packet.source);
 			this.travelTime = System.currentTimeMillis() - packet.time;
 			this.maxTravelTime = this.travelTime;
 			this.nPackets = 1;
@@ -58,6 +60,8 @@ public class FlowStat {
 			this.nBytes += Main.sizeof(packet);
 			this.nPayloadBytes += packet.payload.length;
 			this.pathLength = (this.nPackets*this.pathLength + 1.0 * (packet.path.size()-1)) / (this.nPackets+1);
+			double expansion = (packet.path.size() - 1) / Main.lengths.get(packet.source);			
+			this.pathExpansion = (this.nPackets*this.pathExpansion + 1.0 * (expansion)) / (this.nPackets + 1);
 			if(packet.path.size()-1 > this.maxPathLength){
 				maxPathLength = packet.path.size()-1;
 			}
@@ -83,6 +87,7 @@ public class FlowStat {
 		ret += "nBytes:" + nBytes + ", ";
 		ret += "nPayLoadBytes:" + nPayloadBytes + ", ";
 		ret += "avgPathLength:" + pathLength + ", ";
+		ret += "avgPathExpansion: " + pathExpansion + ", ";
 		ret += "maxPathLength:" + maxPathLength + ", ";
 		ret += "avgTravelTime:" + travelTime + ", ";
 		ret += "maxTravelTime:" + maxTravelTime + "]";
