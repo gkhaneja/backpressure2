@@ -1,0 +1,68 @@
+\documentclass[12pt, a4paper, twocolumn]{article}
+
+\usepackage{color}
+\pagecolor{white}
+\usepackage{xspace}
+%\usepackage{numprint}
+%\usepackage{url}
+%\usepackage{times}
+%\usepackage{caption}
+\usepackage{titling}
+%\usepackage{titlesec}
+\usepackage{sectsty}
+%\sectionfont{\centering}
+\usepackage{url}
+\usepackage{float}
+%\usepakcage{graphicx}
+\usepackage{array}
+\usepackage[hang,scriptsize,tight,nooneline]{subfigure}
+
+%\usepackage{helvet}
+%\renewcommand{\familydefault}{\sfdefault}
+
+%\renewcommand{\familydefault}{\sfdefault}
+%\normalfont
+
+\usepackage{tgtermes}
+\usepackage{enumitem}
+
+\usepackage{xspace}
+\usepackage[pdftex]{graphicx}
+
+\newcolumntype{L}[1]{>{\raggedright\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+\newcolumntype{C}[1]{>{\centering\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+\newcolumntype{R}[1]{>{\raggedleft\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+
+%\titleformat{\section}
+%  {\normalfont\Large\bfseries\centering}{\thesection}{1em}{}
+    
+\setlength{\droptitle}{-10em}
+%\usepackage[a4paper]{geometry}
+\usepackage[top=1.5in, bottom=1.5in, left=1in, right=1in]{geometry}
+%\usepackage[utf8]{inputenc}
+%\newcommand{\fixme}[1]{{\bf\textcolor{red}{[#1]}}}
+
+
+\begin{document}
+\title{\bf{BP STEP-UP \\ Backpressure-based routing protocol}}
+\author{Sangeetha Abdu Jyothi, Gourav Khaneja}
+\date{}
+\maketitle
+
+\input{abstract}
+\input{intro}
+%\bigskip
+\input{related}
+\input{backPressure}
+
+%\input{experiments}
+
+
+\section{Conclusion}
+Implementation of throughput-optimal routing scheme presents a unique challenge in the domain of distributed systems. We need a system that can efficiently route traffic under varying loads with minimal delay and no apriori knowledge of the incoming flow rates. We propose to modify an exisiting idea and improve its performance to tackle this problem effectively.
+
+We have built a simulator and tested existing and new variants of backpressure protocol. Combination of various optimization techniques allow us to improve the performance of basic backpressure routing protocol by three orders of magnitude. Thus, simulator-based initial analysis provides us a promising outlook for the deployment of a distributed throughput-optimal routing scheme. 
+%\input{timeline}
+\bibliography{references}
+\bibliographystyle{unsrt}
+\end{document}

@@ -1,0 +1,44 @@
+\label{sec:backPressure}
+\section{Technique - Backpressure routing}
+The goal of our project is to develop a distributed throughput optimal routing scheme. A throughput-optimal routing scheme implies that if the demand on the network, i.e, the set of flow requirements, is less than the available capacity in the network, the routing and scheduling scheme should be capable of handling the traffic with minimal delay. In order to achieve our primary goal, we rely on the technique of backpressure routing. In this section, we describe the network model used for the analysis of backpressure routing. Next, we introduce the original backpressure protocol, existing variations of it and our modifications.
+
+\subsection{Network model}
+The network model consists of a directed graph $G=(N,E)$ where $N$ is the set of nodes and $E$ is the set of directed edges. A bi-directional link in the network is represented by two directed edges in the graph. A directed edge that can send packets from node $n$ to node $j$ is denoted by $(nj) \epsilon E$. We assume that the time is slotted for the initial derivation. Capacity of the link $(nj)$ is represented by $c_{nj}$, which is the maximum number of packets that can be transmitted in one time-slot.
+
+The set of flows in the network is denoted by $F$. Although each flow has a specific source and destination in the network, no paths are specified. Each flow has a specific input rate denoted by $x_{f}$. $\mu_{nj}^{d}$ is used to represent the rate allocated to flows destined to node $d$ on link $(nj)$.
+
+\subsection{Backpressure Protocol}
+In this section, we describe the basic backpressure algorithm proposed in \cite{BP-orig} and its shortcomings. The original backpressure protocol put forward an iterative algorithm that combines routing and scheduling. Each node in the network maintains a separate queue for every destination in the network. The backpressure on a link for a particular destination in a given time slot is 
+\begin{equation}
+w_{nj}^{d}[t] = Q_{nd}[t] - Q_{jd}[t]
+\end{equation}
+where $Q_{nd}[t]$ denotes the queue length for destination $d$ on node $n$ at time-slot $t$. In each time slot, a single destination is chosen for transmission based on the largest backpressure. If multiple destinations have the same backpressure, one of them is chosen randomly. The chosen destination is given by
+
+\begin{equation}
+d^{*}_{nj}[t] = arg\:max\;{w_{nj}^{d}[t]}
+\end{equation}
+
+At time $t$, for each link $(nj)$, $c_{nj}$ packets are transmitted from $Q_{nd^{*}}$ and added to $Q_{jd^{*}}$. Throughput optimality of this scheme is proved in \cite{BP-orig}. But this protocol has several disadvantages. It requires per-destination queues at all nodes in the network. The protocol forces a flow to explore all paths in the network before converging on the best paths. This can lead to routing loops, large queues and hence, large delays in the network. Due to these constraints, backpressure routing is not used in practice.
+
+\subsection{Modified backpressure Protocol}
+Several modifications have been proposed to improve the performance of backpressure routing protocol. We focus on Packet-by-packet Adaptive Routing for Networks (PARN)~\cite{Srikant3}, In order to improve the performance of the original backpressure routing protocol, PARN introduces the following modifications.
+\begin{itemize}
+\item PARN requires per-neighbor queues at destination. (These are already available on current routers). Instead of per-destination queues, PARN maintains counters called shadow queues. Packet transmission between shadow-queues manifest as a decrease in counter at the sender and an increase in counter at the receiver. Packet transmissions occur in both real queues and shadow queues in each time-slot. The complex interaction between real queues and shadow queues can be referred further in ~\cite{Srikant3}. At a high level, shadow queues perform the backpressure comparisons and indirectly influences the scheduling of real packets. The complexity of backpressure computations is shifted from real-packet transmissions to the shadow queues.
+
+\item When a flow adds packets at the rate $x_{f}$ to the real queue, shadow queue counters are incremented at a rate $ x_{f} * (1+\epsilon)$. This additional pressure on shadow queue forces a faster convergence in the shadow queue domain. 
+
+\item While the basic backpressure allow packet transmission when the backpressure is positive, PARN requires that the backpressure be greater than a threshold of M. This forces the flows to follow shorter paths.
+\end{itemize}
+
+We derive inspiration from these modifications - separation of real packets and backpressure computation, stressing the shdow queues for faster convergence and forcing the packets through a shorter path.
+
+\subsection{Proposed modifications}
+After analyzing the performance of basic backpressure protocol and PARN, we propose the following modifications. Note that the following modifications are added over PARN since its performance is better than that of the original backpressure protocol. But we test it under all scenarios.
+
+\begin{itemize}
+\item \textbf{Proportional splitting} - In the backpressure algorithm and its various modifications, a single destination is chosen for transmission at each time-slot. Intuitively, this does not provide us with a smooth transition in the queue lengths. The queue lengths of destinations fluctuate tremendously depending on $c_{nj}$. The chosen destination transmits $c_{nj}$ packets at each time-slot. As a result, it transitions from the highest backpressure destination to one with a very low backpressure and continues to oscillate between these two stages. To allow a smoother convergence through smoother transitions, we split the capacity proportionally across all destinations which have a positive backpressure. Mathematically, we transition from a linear cost function to logarithmic cost function. This idea was initially proposed by Walton in a different context~\cite{walton}. We demonstrate that this approach significantly improves the performance of backpressure protocol and its variants.
+   
+\item \textbf{Shadow queue initialization}  The initial value of shadow queue does not affect the correctness of the system. To take advantage of this, we initialize the shadow queue with a multiple of path length. Thus, we establish an initial backpressure that favors shortest path. This can reduce the convergence time significantly. We show that using explicit path length information is more useful than using an indirect metirc like the threshold M.
+
+\end{itemize}
+ 

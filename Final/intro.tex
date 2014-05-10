@@ -1,0 +1,32 @@
+\label{sec:intro}
+
+
+%\begin{center}
+\section{Introduction}
+%\end{center}
+
+Distributed systems face a wide array of challenges such as maintaining consistency, availability, resiliency to failure etc.  While an ideal distributed system should tackle all of these challenges effectively, this is not feasible in practice. Each system is forced to make trade-offs on various aspects of the design. However, as distributed systems are designed to serve specific environments, we can optimize the system to tackle only those issues that are critical to the intended environment. Networks constitute one of the most popular and widely used distributed systems, and the networking domain presents us with a unique array of challenges. Our project attempts to solve the problem of traffic engineering in networks by extending existing ideas.
+
+Routing decisions of shortest path routing protocols are solely based on pre-assigned costs in the network and are agnostic to the real traffic. This can lead to congestion in some parts of the network and under-utilization elsewhere. We can achieve greater responsiveness to traffic variations and freedom from hot-spots by relying on protocols that combine distance information with knowledge about congestion in the network. 
+
+Backpressure routing protocol~\cite{BP-orig} is based on the idea that queue lengths provide direct indication of congestion in the network. Each node in the network decides the next hop for incoming traffic by comparing its queue length with that of its neighbors. The largest difference in queue length, i.e. the largest gradient, will occur along the best path towards destination. Thus, each node forwards traffic based on queue length information received from its immediate neighbors. 
+
+Backpressure routing scheme is throughput optimal -- if the incoming traffic is within the capacity region of the network, the protocol will route it successfully. In spite of its throughput efficiency, backpressure protocol is not widely used in practice due to several limitations. First, the protocol does not consider path lengths. Forwarding decisions are solely based on local congestion information. This causes routing loops and delays in the network. Second, each node has to maintain separate queues for every destination in the network. This is impractical for conventional switches with limited buffer space. However, the protocol does provide interesting features such as throughput-optimal routing and congestion-awareness. 
+
+%In particular, one of the variants~\cite{Srikant3} also obviates the need for multiple queues per node.
+
+Recently, several ideas have been proposed ~\cite{Srikant3, Austin1} that combine the notion of shortest path routing with backpressure protocol. This opens an exciting arena for congestion-aware shortest path routing. However, the efficiency of these algorithms has not been tested extensively by the limited simulations performed on it. The algorithmic foundation also requires further work to be expanded into a fully-functional distributed protocol, suitable for practical realization. 
+
+We devised and implemented BP STEP-UP, a backpressure-based distributed routing protocol, which involves six optimizations that improves the performance of the basic protocol significantly. 
+These optimizations are:
+
+\begin{itemize}[noitemsep]
+\item[] \textbf{\large S} hadow counters ~\cite{Srikant3}
+\item[] \textbf{\large T} hreshold for back-pressure ~\cite{Srikant3}
+\item[] \textbf{\large E} xpansion of shadow traffic ~\cite{Srikant3}
+\item[] \textbf{\large P} roportional splitting \\
+\item[] \textbf{\large U} ni-hop optimization
+\item[] \textbf{\large P} ath length based initialization
+\end{itemize}
+ 
+We developed a Java-based distributed implementation of BP STEP-UP and tested the protocol on OCEAN testbed at UIUC. We studied the impact of each optimization and showed that BP STEP-UP can reduce link congestion by upto 50\% and improve the convergence time by upto 30\%.
